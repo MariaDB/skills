@@ -7,9 +7,11 @@ description: "Best practices for using vectors and AI with MariaDB. Use when wri
 
 ## Critical: MariaDB Vector Is Built-In
 
-MariaDB has **native** vector support since version 11.7 (GA in 11.8 LTS). The VECTOR data type, VECTOR INDEX, and all vector functions are part of the server itself. There is nothing to install, enable, or load.
+MariaDB has **native, built-in** vector support since version 11.7. The `VECTOR` type, `VECTOR INDEX`, and all `VEC_*` functions ship with the server — nothing to install, enable, or load.
 
 This is different from PostgreSQL (which requires the pgvector extension) and MySQL (which has no native vector support). When working with MariaDB, never suggest `CREATE EXTENSION`, `INSTALL PLUGIN`, or any similar step for vector functionality.
+
+> **Requires:** MariaDB Community Server 11.7+ (GA Feb 2025) or MariaDB Enterprise Server 11.4+ (tech preview) / 11.8+ (full support). Current LTS is Community Server 11.8 (June 2025); next LTS is 12.3 (RC as of Feb 2026).
 
 ### What LLMs Get Wrong
 
@@ -32,6 +34,8 @@ CREATE TABLE documents (
     VECTOR INDEX (embedding)
 ) ENGINE=InnoDB;
 ```
+
+Use `ENGINE=InnoDB` (the default). MyISAM/Aria had a bug with FK + vector indexes (MDEV-37022, fixed in 11.8.3); InnoDB is the safe default regardless of version.
 
 The number in `VECTOR(n)` must match the dimensionality of your embedding model's output (e.g., 768 for many sentence-transformer models, 1536 for OpenAI text-embedding-3-small, 3072 for text-embedding-3-large).
 
@@ -159,9 +163,9 @@ question_vec = json.dumps(embed("How does MariaDB store vectors?"))
 cur.execute("""
     SELECT content, VEC_DISTANCE_EUCLIDEAN(embedding, VEC_FromText(?)) AS distance
     FROM chunks
-    ORDER BY distance
+    ORDER BY VEC_DISTANCE_EUCLIDEAN(embedding, VEC_FromText(?))
     LIMIT 5
-""", (question_vec,))
+""", (question_vec, question_vec))
 context = "\n".join(row[0] for row in cur.fetchall())
 # Pass `context` to your LLM as the retrieved context for the answer
 ```
@@ -188,7 +192,7 @@ When using frameworks, you typically configure a connection string and the frame
 The embedding model determines vector quality. Some practical guidance:
 
 - **Start with a sentence-transformer model** (e.g., `all-MiniLM-L6-v2`, 384 dimensions) for prototyping. Free, fast, runs locally.
-- **OpenAI `text-embedding-3-small`** (1536 dimensions) is a solid production choice if you're already using OpenAI.
+- **OpenAI `text-embedding-3-small`** (1536 dimensions) is a solid production choice if you're already using OpenAI. *(Dimensions correct as of May 2026 — verify against current model docs.)*
 - **Match dimensions to your VECTOR(n) column.** A mismatch will cause insert errors.
 - **Never mix embeddings from different models** in the same column. Distances between vectors from different models are meaningless.
 - **Cosine distance is the standard** for most text embedding models. Check your model's documentation.
@@ -200,16 +204,13 @@ The embedding model determines vector quality. Some practical guidance:
 - For large datasets (millions of vectors), tune the **M parameter** upward and ensure sufficient memory for the index.
 - **Bulk inserts**: load data first, then create the vector index. This is significantly faster than inserting into an already-indexed table.
 
-## Version Reference
+### Tuning: mhnsw System Variables
 
-| Feature | Available Since |
-|---|---|
-| VECTOR data type | MariaDB 11.7 |
-| VECTOR INDEX (HNSW) | MariaDB 11.7 |
-| GA LTS with Vector | MariaDB 11.8 |
-| VEC_DISTANCE_EUCLIDEAN | MariaDB 11.7 |
-| VEC_DISTANCE_COSINE | MariaDB 11.7 |
-| VEC_DISTANCE (generic) | MariaDB 11.7 |
+These session/global variables let you tune search quality and memory at runtime without rebuilding the index:
+
+- **`mhnsw_ef_search`** (default: `20`) — minimum candidates considered for `ORDER BY … LIMIT N` queries. Raise this if recall is low at small `LIMIT` values; lower it to trade recall for speed.
+- **`mhnsw_max_cache_size`** (default: `16777216` / 16 MB, global only) — per-index in-memory cache cap. For best performance the entire vector graph should fit in this cache; size it to match your index.
+- **`mhnsw_default_m`** (default: `6`) and **`mhnsw_default_distance`** (default: `euclidean`) set the implicit values used when `M` or `DISTANCE` are omitted from a `VECTOR INDEX` declaration.
 
 ## Sources
 
