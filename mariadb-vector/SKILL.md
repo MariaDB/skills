@@ -144,7 +144,7 @@ Keep `doc_id` indexed so you can join back to the source document or filter by d
 import mariadb, json
 from openai import OpenAI
 
-conn = mariadb.connect(host="127.0.0.1", port=3306, user="root", password="...", database="mydb")
+conn = mariadb.connect(host="127.0.0.1", port=3306, user="root", password="...", database="ragdb")
 cur = conn.cursor()
 client = OpenAI()
 
