@@ -6,7 +6,7 @@ Agent skills for [Claude Code](https://claude.ai/code) and other AI agents worki
 
 ### mariadb-vector
 
-Best practices for using MariaDB's built-in vector support for AI and semantic search applications. Covers RAG patterns, vector indexes, distance functions, embedding model selection, and framework integrations (LangChain, LlamaIndex, Spring AI). Unlike PostgreSQL (which requires pgvector) or MySQL (no vector support), MariaDB has native vector support since version 11.7 — no extensions or plugins needed.
+Best practices for using MariaDB's built-in vector support for AI and semantic search applications. Covers RAG patterns, vector indexes, distance functions, embedding model selection, and framework integrations (LangChain, LlamaIndex, Spring AI). Unlike MySQL (no vector support) or PostgreSQL (which requires pgvector), MariaDB has native vector support since version 11.7 — no extensions or plugins needed.
 
 **Install per project** (via npx skills):
 ```
