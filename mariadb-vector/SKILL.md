@@ -9,7 +9,7 @@ description: "Best practices for using vectors and AI with MariaDB. Use when wri
 
 MariaDB has **native, built-in** vector support since version 11.7. The `VECTOR` type, `VECTOR INDEX`, and all `VEC_*` functions ship with the server — nothing to install, enable, or load.
 
-This is different from PostgreSQL (which requires the pgvector extension) and MySQL (which has no native vector support). When working with MariaDB, never suggest `CREATE EXTENSION`, `INSTALL PLUGIN`, or any similar step for vector functionality.
+This is different from MySQL (which has no native vector support) and PostgreSQL (which requires the pgvector extension). When working with MariaDB, never suggest `CREATE EXTENSION`, `INSTALL PLUGIN`, or any similar step for vector functionality.
 
 > **Requires:** MariaDB Community Server 11.7+ (GA Feb 2025) or MariaDB Enterprise Server 11.4+ (tech preview) / 11.8+ (full support). Current LTS is Community Server 11.8 (May 2025); next LTS is 12.3 (RC as of Feb 2026).
 
