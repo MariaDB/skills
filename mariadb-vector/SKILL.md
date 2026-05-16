@@ -144,12 +144,25 @@ Keep `doc_id` indexed so you can join back to the source document or filter by d
 import mariadb, json
 from openai import OpenAI
 
-conn = mariadb.connect(host="127.0.0.1", port=3306, user="root", password="", database="ragdb")
-cur = conn.cursor()
 client = OpenAI()
 
 def embed(text):
     return client.embeddings.create(input=text, model="text-embedding-3-small").data[0].embedding
+
+# Create database and table if they don't exist
+conn = mariadb.connect(host="127.0.0.1", port=3306, user="root", password="")
+cur = conn.cursor()
+cur.execute("CREATE DATABASE IF NOT EXISTS ragdb")
+cur.execute("USE ragdb")
+cur.execute("""
+    CREATE TABLE IF NOT EXISTS chunks (
+        chunk_id  BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+        content   TEXT NOT NULL,
+        embedding VECTOR(1536) NOT NULL,
+        VECTOR INDEX (embedding) DISTANCE=cosine
+    ) ENGINE=InnoDB
+""")
+conn.commit()
 
 # Store a document chunk
 cur.execute(
