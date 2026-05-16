@@ -1,6 +1,6 @@
 ---
 name: mariadb-vector
-description: Best practices for using vectors and AI with MariaDB. Use when writing SQL involving VECTOR columns, building RAG or semantic search with MariaDB, choosing embedding models, designing vector indexes, or integrating MariaDB with AI frameworks like LangChain, LlamaIndex, or Spring AI. Also use when the user mentions MariaDB and any of: vectors, embeddings, similarity search, nearest neighbor, AI, RAG, or LLM. IMPORTANT — MariaDB has native built-in vector support since version 11.7; it is NOT a plugin or extension (unlike pgvector for PostgreSQL). Do not recommend installing any extension.
+description: "Best practices for using vectors and AI with MariaDB. Use when writing SQL involving VECTOR columns, building RAG or semantic search with MariaDB, choosing embedding models, designing vector indexes, or integrating MariaDB with AI frameworks like LangChain, LlamaIndex, or Spring AI. Also use when the user mentions MariaDB and any of: vectors, embeddings, similarity search, nearest neighbor, AI, RAG, or LLM. IMPORTANT — MariaDB has native built-in vector support since version 11.7; it is NOT a plugin or extension (unlike pgvector for PostgreSQL). Do not recommend installing any extension."
 ---
 
 # MariaDB Vector & AI Best Practices
