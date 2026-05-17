@@ -6,20 +6,20 @@ Skills for AI agents working with MariaDB.
 
 ## Skills
 
-### mariadb-vector
+### vector
 
 Best practices for using MariaDB's built-in vector support for AI and semantic search applications. Covers RAG patterns, vector indexes, distance functions, embedding model selection, and framework integrations (LangChain, LlamaIndex, Spring AI). Unlike MySQL (no vector support) or PostgreSQL (which requires pgvector), MariaDB has native vector support since version 11.7 — no extensions or plugins needed.
 
 **Install per project** (via npx skills):
 ```
-npx skills add robertsilen/mariadb-skills/mariadb-vector
+npx skills add robertsilen/mariadb-skills/vector
 ```
 
 **Install globally in Claude Code:**
 ```bash
-mkdir -p ~/.claude/skills/mariadb-vector
-curl -o ~/.claude/skills/mariadb-vector/SKILL.md \
-  https://raw.githubusercontent.com/robertsilen/mariadb-skills/main/mariadb-vector/SKILL.md
+mkdir -p ~/.claude/skills/vector
+curl -o ~/.claude/skills/vector/SKILL.md \
+  https://raw.githubusercontent.com/robertsilen/mariadb-skills/main/vector/SKILL.md
 ```
 
 ## About
