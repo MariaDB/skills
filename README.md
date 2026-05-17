@@ -12,14 +12,14 @@ Best practices for using MariaDB's built-in vector support for AI and semantic s
 
 **Install per project** (via npx skills):
 ```
-npx skills add robertsilen/mariadb-skills/vector
+npx skills add mariadb/skills/vector
 ```
 
 **Install globally in Claude Code:**
 ```bash
 mkdir -p ~/.claude/skills/vector
 curl -o ~/.claude/skills/vector/SKILL.md \
-  https://raw.githubusercontent.com/robertsilen/mariadb-skills/main/vector/SKILL.md
+  https://raw.githubusercontent.com/mariadb/skills/main/vector/SKILL.md
 ```
 
 ## About
