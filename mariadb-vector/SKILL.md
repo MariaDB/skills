@@ -122,6 +122,8 @@ The most common AI use case with MariaDB Vector. The flow:
    ```
 6. **Feed** retrieved chunks as context to your LLM for the final answer.
 
+**See also:** To combine full-text (keyword) and vector retrieval, see [Hybrid search with Reciprocal Rank Fusion (RRF)](https://mariadb.com/docs/server/reference/sql-structure/vectors/optimizing-hybrid-search-query-with-reciprocal-rank-fusion-rrf) — useful when queries mix exact terms with semantic paraphrase.
+
 ### RAG Table Design
 
 ```sql
@@ -235,5 +237,6 @@ These session/global variables let you tune search quality and memory at runtime
 - [VEC_DISTANCE_EUCLIDEAN](https://mariadb.com/docs/server/reference/sql-functions/vector-functions/vec_distance_euclidean)
 - [VEC_DISTANCE_COSINE](https://mariadb.com/docs/server/reference/sql-functions/vector-functions/vec_distance_cosine)
 - [RAG with MariaDB Vector tutorial](https://mariadb.org/rag-with-mariadb-vector/) — end-to-end Python + OpenAI example
+- [Hybrid search with RRF](https://mariadb.com/docs/server/reference/sql-structure/vectors/optimizing-hybrid-search-query-with-reciprocal-rank-fusion-rrf) — merge full-text and vector ranked lists
 - [MariaDB Vector project page](https://mariadb.org/projects/mariadb-vector/)
 - [MariaDB MCP Server](https://github.com/mariadb/mcp)
