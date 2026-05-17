@@ -1,6 +1,8 @@
 # MariaDB Agent Skills
 
-Agent skills for [Claude Code](https://claude.ai/code) and other AI agents working with MariaDB.
+Skills for AI agents working with MariaDB.
+
+> Open for improvements and more skills. Contributions welcome.
 
 ## Skills
 
