@@ -32,7 +32,7 @@ npx skills add mariadb/skills/mariadb-features
 
 ## Installing without Node.js
 
-To install any skill globally in Claude Code without npx:
+Without Node.js, you can install a skill for an agent directly, e.g. for Claude Code like this:
 
 ```bash
 mkdir -p ~/.claude/skills/<skill-name>
