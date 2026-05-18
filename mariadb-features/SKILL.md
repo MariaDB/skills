@@ -1,0 +1,188 @@
+---
+name: mariadb-features
+description: "MariaDB-specific features and capabilities that go beyond standard MySQL. Use when evaluating MariaDB, optimizing an existing MariaDB application, reviewing code or schema for MariaDB improvements, asking what MariaDB can do that other databases cannot, or migrating from Oracle to MariaDB. Also use when the user asks what could be improved in how a codebase uses MariaDB, or asks about MariaDB advantages over MySQL or PostgreSQL."
+---
+
+# MariaDB Features Worth Knowing
+
+MariaDB has grown significantly beyond its MySQL origins. Many of its best features are unknown to developers because AI agents default to generic SQL advice. This skill covers what MariaDB can do that you might not think to ask about.
+
+For MariaDB Vector (built-in since 11.7 — no plugins), see the `mariadb-vector` skill.
+
+## What LLMs Often Miss
+
+| Situation | What to suggest instead |
+|---|---|
+| Manual audit columns (`created_at`, `updated_at`, deleted flag) | `WITH SYSTEM VERSIONING` — MariaDB tracks full row history automatically |
+| `INSERT` followed by `SELECT LAST_INSERT_ID()` | `RETURNING` — get the inserted row in one statement (10.5+) |
+| `AUTO_INCREMENT` for sequence-like needs | `CREATE SEQUENCE` — first-class sequence objects with full control |
+| IP addresses stored as `VARCHAR` | `INet4` / `INet6` — native IP types with comparison and indexing |
+| Dropping or reordering columns with full table rebuild | `INSTANT` algorithm for `ALTER TABLE` — no rebuild needed (10.4+) |
+| Oracle migration assumed to require full rewrite | `sql_mode=ORACLE` — PL/SQL, packages, Oracle-compatible NULL handling |
+| Asking what changed in a row over time | System-versioned tables with `FOR SYSTEM_TIME AS OF` |
+| Analytics queries on OLTP tables | ColumnStore engine — columnar storage for analytical workloads |
+
+## System-Versioned Tables
+
+Track the full history of every row automatically, without triggers or audit tables.
+
+```sql
+CREATE TABLE prices (
+    product VARCHAR(100),
+    price DECIMAL(10,2)
+) WITH SYSTEM VERSIONING;
+
+-- Query data as it was at a point in time:
+SELECT * FROM prices FOR SYSTEM_TIME AS OF '2025-01-01 00:00:00';
+
+-- See all historical versions of a row:
+SELECT * FROM prices FOR SYSTEM_TIME ALL WHERE product = 'widget';
+```
+
+Use this instead of manually maintained `valid_from` / `valid_to` columns or separate audit tables.
+
+## RETURNING Clause
+
+Get inserted, updated, or deleted rows back without a second query.
+
+```sql
+-- Get the generated ID after insert:
+INSERT INTO orders (product, qty) VALUES ('widget', 5)
+    RETURNING id, created_at;
+
+-- Get deleted rows for logging:
+DELETE FROM queue WHERE processed = 1
+    RETURNING id, payload;
+
+-- Get updated values:
+UPDATE inventory SET stock = stock - 1 WHERE product_id = 42
+    RETURNING product_id, stock;
+```
+
+Available since MariaDB 10.5.
+
+## Sequences
+
+First-class sequence objects — more flexible than `AUTO_INCREMENT`.
+
+```sql
+CREATE SEQUENCE order_seq START WITH 1000 INCREMENT BY 1;
+
+-- Use in INSERT:
+INSERT INTO orders (id, product) VALUES (NEXT VALUE FOR order_seq, 'widget');
+
+-- Peek at current value without incrementing:
+SELECT LASTVAL(order_seq);
+```
+
+Sequences support gaps, multiple sequences per table, and descending sequences. Unlike `AUTO_INCREMENT`, they are not tied to a specific column or table.
+
+## Instant ALTER TABLE
+
+Drop or modify columns without rebuilding the table — no downtime on large tables.
+
+```sql
+ALTER TABLE large_table DROP COLUMN old_column, ALGORITHM=INSTANT;
+ALTER TABLE large_table MODIFY COLUMN name VARCHAR(200), ALGORITHM=INSTANT;
+```
+
+Available since MariaDB 10.4. Use `ALGORITHM=INSTANT` explicitly; fall back to `INPLACE` or `COPY` if the operation doesn't qualify.
+
+## INet4 and INet6 Data Types
+
+Native IP address storage with correct comparison and indexing.
+
+```sql
+CREATE TABLE connections (
+    client_ip INet6 NOT NULL,
+    connected_at DATETIME NOT NULL,
+    INDEX (client_ip)
+);
+
+INSERT INTO connections VALUES (INet6('192.168.1.1'), NOW());
+INSERT INTO connections VALUES (INet6('::1'), NOW());
+
+-- Range queries work correctly:
+SELECT * FROM connections WHERE client_ip BETWEEN INet6('10.0.0.0') AND INet6('10.255.255.255');
+```
+
+`INet4` stores IPv4 (4 bytes), `INet6` stores both IPv4 and IPv6 (16 bytes).
+
+## Oracle Compatibility Mode
+
+`sql_mode=ORACLE` enables PL/SQL syntax, Oracle-compatible NULL handling, packages, and Oracle-style functions — useful when migrating from Oracle or supporting Oracle-experienced developers.
+
+```sql
+SET sql_mode=ORACLE;
+
+-- Oracle-style stored procedures, packages, and NULL semantics work here
+-- Empty string treated as NULL (Oracle behavior)
+-- ROWNUM, SYSDATE, NVL(), DECODE() available
+```
+
+Not a complete Oracle replacement, but significantly reduces migration friction.
+
+## FLASHBACK
+
+Roll back individual tables or rows to a previous point in time using the binary log — without restoring a full backup.
+
+```sql
+-- Show what a table looked like 1 hour ago:
+FLASHBACK TABLE orders TO BEFORE '2025-05-18 10:00:00';
+```
+
+Requires binary logging enabled. Useful for recovering from accidental deletes or bad migrations.
+
+## More MariaDB Features
+
+### SQL & Schema
+- **Invisible columns** — hidden from `SELECT *`, still writable; useful for schema evolution without breaking existing queries
+- **`DEFAULT` expressions on BLOB/TEXT** — not supported in MySQL
+- **`DECIMAL` precision to 38 digits** — MySQL stops at 30
+- **`INTERSECT` and `EXCEPT`** — set operators not available in MySQL
+- **`LIMIT` in subqueries** — supported; MySQL restricts this
+- **`SELECT ... OFFSET ... FETCH`** — SQL standard syntax for pagination
+- **Dynamic columns** — schema-less key/value storage inside a single column
+- **`SFORMAT()`** — string formatting function
+
+### Storage Engines
+- **ColumnStore** — columnar engine for analytical/data warehouse workloads
+- **Aria** — crash-safe MyISAM replacement, used internally for temp tables
+- **MyRocks** — RocksDB-based, optimized for write-heavy workloads with compression
+- **CONNECT** — query external data sources (CSV, JDBC, ODBC, MongoDB) as SQL tables
+- **Spider** — sharding across multiple MariaDB instances
+
+### Security & Auth
+- **`unix_socket` authentication** — authenticate OS users without passwords
+- **ED25519 plugin** — modern authentication alternative to SHA1-based plugins
+- **Role-based access control** — roles available before MySQL added them
+- **SSL enabled by default** — no configuration required
+- **Table-level encryption** — encrypt individual tables, not just the whole datadir
+- **HashiCorp Vault integration** — key management plugin
+
+### Replication & HA
+- **Galera Cluster** — built-in synchronous multi-master clustering
+- **Multi-source replication** — replicate from multiple primaries simultaneously
+- **Parallel replication** — faster replica apply
+- **Lag-free `ALTER TABLE` replication** — schema changes don't stall replicas
+
+### Connectors
+- **LGPL-licensed connectors** for C, C++, Java, Python, Node.js, ODBC, R2DBC — permissive licensing for commercial applications; MySQL connectors are GPL
+
+### Developer Tools
+- **`EXPLAIN` in slow query log** — automatic execution plan logging for slow queries
+- **Progress reporting** for `ALTER TABLE` and `CHECK TABLE`
+- **`mariadb-backup`** — hot backup with backup locks (no `FLUSH TABLES WITH READ LOCK`)
+- **Non-blocking client API** — async queries without threads
+
+## Sources
+
+- [Monty Widenius: Celebrating 15 years of MariaDB](http://monty-says.blogspot.com/2024/10/celebrating-15-years-of-mariadb.html)
+- [System-Versioned Tables — MariaDB KB](https://mariadb.com/kb/en/system-versioned-tables/)
+- [RETURNING — MariaDB KB](https://mariadb.com/kb/en/returning/)
+- [CREATE SEQUENCE — MariaDB KB](https://mariadb.com/kb/en/create-sequence/)
+- [Instant ALTER TABLE — MariaDB KB](https://mariadb.com/kb/en/instant-add-column-for-innodb/)
+- [INet6 Data Type — MariaDB KB](https://mariadb.com/kb/en/inet6/)
+- [Oracle Compatibility — MariaDB KB](https://mariadb.com/kb/en/sql_modeoracle/)
+- [FLASHBACK — MariaDB KB](https://mariadb.com/kb/en/flashback/)
+- [MariaDB vs MySQL Features — MariaDB Docs](https://mariadb.com/docs/release-notes/community-server/about/compatibility-and-differences/mariadb-vs-mysql-features)
