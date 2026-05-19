@@ -4,6 +4,16 @@ Skills for AI agents working with MariaDB.
 
 > Open for improvements and more skills. Contributions welcome.
 
+## Install
+
+To browse and choose from all MariaDB skills interactively:
+
+```
+npx skills add mariadb
+```
+
+Or install a specific skill directly:
+
 ## Skills
 
 ### mysql-to-mariadb
