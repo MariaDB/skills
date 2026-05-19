@@ -22,6 +22,14 @@ MariaDB-specific features worth knowing about — the things AI agents don't sug
 npx skills add mariadb/skills/mariadb-features
 ```
 
+### oracle-to-mariadb
+
+Compatibility guide for developers migrating from Oracle Database to MariaDB. MariaDB is the only open source database with native PL/SQL compatibility — MariaDB's `sql_mode=ORACLE` enables approximately 80% of Oracle code to run without rewrites. Covers data type mapping, PL/SQL compatibility, what needs manual rewriting, and migration tools.
+
+```
+npx skills add mariadb/skills/oracle-to-mariadb
+```
+
 ### mariadb-vector
 
 Best practices for using MariaDB's built-in vector support for AI and semantic search. Covers RAG patterns, vector indexes, distance functions, embedding model selection, and framework integrations (LangChain, LlamaIndex, Spring AI). Unlike MySQL (no vector support) or PostgreSQL (which requires pgvector), MariaDB has native vector support since version 11.7 — no extensions or plugins needed.
@@ -40,7 +48,7 @@ curl -o ~/.claude/skills/<skill-name>/SKILL.md \
   https://raw.githubusercontent.com/mariadb/skills/main/<skill-name>/SKILL.md
 ```
 
-Replace `<skill-name>` with `mysql-to-mariadb`, `mariadb-features`, or `mariadb-vector`.
+Replace `<skill-name>` with `mysql-to-mariadb`, `oracle-to-mariadb`, `mariadb-features`, or `mariadb-vector`.
 
 ## About
 
