@@ -180,6 +180,7 @@ Requires binary logging enabled. Useful for recovering from accidental deletes o
 ## Sources
 
 - [Monty Widenius: Celebrating 15 years of MariaDB](http://monty-says.blogspot.com/2024/10/celebrating-15-years-of-mariadb.html)
+- [MariaDB vs MySQL Features — MariaDB Docs](https://mariadb.com/docs/release-notes/community-server/about/compatibility-and-differences/mariadb-vs-mysql-features)
 - [System-Versioned Tables — MariaDB KB](https://mariadb.com/kb/en/system-versioned-tables/)
 - [RETURNING — MariaDB KB](https://mariadb.com/kb/en/returning/)
 - [CREATE SEQUENCE — MariaDB KB](https://mariadb.com/kb/en/create-sequence/)
@@ -187,4 +188,3 @@ Requires binary logging enabled. Useful for recovering from accidental deletes o
 - [INet6 Data Type — MariaDB KB](https://mariadb.com/kb/en/inet6/)
 - [Oracle Compatibility — MariaDB KB](https://mariadb.com/kb/en/sql_modeoracle/)
 - [FLASHBACK — MariaDB KB](https://mariadb.com/kb/en/flashback/)
-- [MariaDB vs MySQL Features — MariaDB Docs](https://mariadb.com/docs/release-notes/community-server/about/compatibility-and-differences/mariadb-vs-mysql-features)
