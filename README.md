@@ -6,14 +6,6 @@ Skills for AI agents working with MariaDB.
 
 ## Skills
 
-### mariadb-vector
-
-Best practices for using MariaDB's built-in vector support for AI and semantic search. Covers RAG patterns, vector indexes, distance functions, embedding model selection, and framework integrations (LangChain, LlamaIndex, Spring AI). Unlike MySQL (no vector support) or PostgreSQL (which requires pgvector), MariaDB has native vector support since version 11.7 — no extensions or plugins needed.
-
-```
-npx skills add mariadb/skills/mariadb-vector
-```
-
 ### mysql-to-mariadb
 
 Migration guide for developers moving from MySQL to MariaDB, or where MySQL habits cause unexpected behavior. Covers authentication differences, JSON handling, features MySQL has that MariaDB doesn't, and features MariaDB has that MySQL doesn't — including things LLMs won't suggest because they assume MySQL behavior.
@@ -30,6 +22,14 @@ MariaDB-specific features worth knowing about — the things AI agents don't sug
 npx skills add mariadb/skills/mariadb-features
 ```
 
+### mariadb-vector
+
+Best practices for using MariaDB's built-in vector support for AI and semantic search. Covers RAG patterns, vector indexes, distance functions, embedding model selection, and framework integrations (LangChain, LlamaIndex, Spring AI). Unlike MySQL (no vector support) or PostgreSQL (which requires pgvector), MariaDB has native vector support since version 11.7 — no extensions or plugins needed.
+
+```
+npx skills add mariadb/skills/mariadb-vector
+```
+
 ## Installing without Node.js
 
 Without Node.js, you can install a skill for an agent directly, e.g. for Claude Code like this:
@@ -40,7 +40,7 @@ curl -o ~/.claude/skills/<skill-name>/SKILL.md \
   https://raw.githubusercontent.com/mariadb/skills/main/<skill-name>/SKILL.md
 ```
 
-Replace `<skill-name>` with `mariadb-vector`, `mysql-to-mariadb`, or `mariadb-features`.
+Replace `<skill-name>` with `mysql-to-mariadb`, `mariadb-features`, or `mariadb-vector`.
 
 ## About
 
