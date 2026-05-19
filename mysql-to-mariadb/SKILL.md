@@ -1,6 +1,6 @@
 ---
 name: mysql-to-mariadb
-description: "Best practices for migrating from MySQL to MariaDB, and for developers with MySQL experience working with MariaDB. Use when migrating a MySQL application to MariaDB, when MySQL syntax or habits cause unexpected behavior in MariaDB, when asking about MySQL/MariaDB compatibility, or when adapting code written for MySQL to run on MariaDB. IMPORTANT — MariaDB diverges significantly from MySQL 8.0 and is not a simple drop-in replacement for modern MySQL. Authentication plugins, JSON handling, GTID replication, and several SQL features differ in important ways."
+description: "Compatibility guide for developers moving from MySQL to MariaDB, and for developers with MySQL experience working with MariaDB. Use when migrating a MySQL application to MariaDB, when MySQL syntax or habits cause unexpected behavior in MariaDB, when asking about MySQL/MariaDB compatibility, or when adapting code written for MySQL to run on MariaDB. IMPORTANT — MariaDB diverges significantly from MySQL 8.0 and is not a simple drop-in replacement for modern MySQL. Authentication plugins, JSON handling, GTID replication, and several SQL features differ in important ways."
 ---
 
 # MySQL to MariaDB Migration Guide
@@ -112,8 +112,8 @@ MariaDB and MySQL use different query optimizers with different cost models. Ide
 
 - [MariaDB vs MySQL Compatibility — MariaDB Docs](https://mariadb.com/docs/release-notes/community-server/about/compatibility-and-differences/mariadb-vs-mysql-compatibility)
 - [Moving from MySQL to MariaDB — MariaDB Docs](https://mariadb.com/docs/server/server-management/install-and-upgrade-mariadb/migrating-to-mariadb/moving-from-mysql/)
+- [MDEV-28906 — MySQL 8.0 desired compatibility (Jira epic)](https://jira.mariadb.org/browse/MDEV-28906) — lists individual MySQL 8.0 features not yet in MariaDB
 - [RETURNING — MariaDB KB](https://mariadb.com/kb/en/returning/)
 - [CREATE SEQUENCE — MariaDB KB](https://mariadb.com/kb/en/create-sequence/)
 - [System-Versioned Tables — MariaDB KB](https://mariadb.com/kb/en/system-versioned-tables/)
 - [Authentication Plugins — MariaDB KB](https://mariadb.com/kb/en/authentication-plugins/)
-- [MDEV-28906 — MySQL 8.0 desired compatibility (Jira epic)](https://jira.mariadb.org/browse/MDEV-28906) — lists individual MySQL 8.0 features not yet in MariaDB
