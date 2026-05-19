@@ -5,6 +5,8 @@ description: "Best practices for migrating from MySQL to MariaDB, and for develo
 
 # MySQL to MariaDB Migration Guide
 
+*Last updated: 2026-05-19*
+
 ## Critical: MariaDB Is Not a Drop-In Replacement for MySQL 8.0
 
 MariaDB was a true drop-in replacement for MySQL 5.5 and 5.6. Modern versions diverge significantly from MySQL 8.0. When working with MariaDB, never assume MySQL 8.0 behavior, syntax, or tooling applies without verification.
@@ -59,12 +61,12 @@ These exist in MariaDB but not MySQL — LLMs won't suggest them because they as
   INSERT INTO orders (product, qty) VALUES ('widget', 5) RETURNING id, created_at;
   DELETE FROM queue WHERE processed = 1 RETURNING id;
   ```
-- **`CREATE SEQUENCE`** — first-class sequence objects, more flexible than `AUTO_INCREMENT`:
+- **`CREATE SEQUENCE`** (10.3+) — first-class sequence objects, more flexible than `AUTO_INCREMENT`:
   ```sql
   CREATE SEQUENCE order_seq START WITH 1000 INCREMENT BY 1;
   SELECT NEXT VALUE FOR order_seq;
   ```
-- **`WITH SYSTEM VERSIONING`** — temporal tables that automatically track row history:
+- **`WITH SYSTEM VERSIONING`** (10.3+) — temporal tables that automatically track row history:
   ```sql
   CREATE TABLE prices (
       item VARCHAR(100),
@@ -75,7 +77,7 @@ These exist in MariaDB but not MySQL — LLMs won't suggest them because they as
   ```
 - **`LIMIT` in subqueries** — MariaDB supports `LIMIT` inside subqueries; MySQL restricts this
 - **Galera Cluster** — built-in multi-master clustering, no plugin required
-- **INet4 / INet6 data types** — native IP address storage and comparison
+- **INet4 / INet6 data types** (10.5+) — native IP address storage and comparison
 
 ## Features MySQL Has That MariaDB Doesn't
 

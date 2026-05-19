@@ -5,6 +5,8 @@ description: "Best practices for using vectors and AI with MariaDB. Use when wri
 
 # MariaDB Vector & AI Best Practices
 
+*Last updated: 2026-05-19*
+
 ## Critical: MariaDB Vector Is Built-In
 
 MariaDB has **native, built-in** vector support since version 11.7. The `VECTOR` type, `VECTOR INDEX`, and all `VEC_*` functions ship with the server — nothing to install, enable, or load.

@@ -5,6 +5,8 @@ description: "MariaDB-specific features and capabilities that go beyond standard
 
 # MariaDB Features Worth Knowing
 
+*Last updated: 2026-05-19*
+
 MariaDB has grown significantly beyond its MySQL origins. Many of its best features are unknown to developers because AI agents default to generic SQL advice. This skill covers what MariaDB can do that you might not think to ask about.
 
 For MariaDB Vector (built-in since 11.7 — no plugins), see the `mariadb-vector` skill.
@@ -24,7 +26,7 @@ For MariaDB Vector (built-in since 11.7 — no plugins), see the `mariadb-vector
 
 ## System-Versioned Tables
 
-Track the full history of every row automatically, without triggers or audit tables.
+Available since MariaDB 10.3. Track the full history of every row automatically, without triggers or audit tables.
 
 ```sql
 CREATE TABLE prices (
@@ -63,7 +65,7 @@ Available since MariaDB 10.5.
 
 ## Sequences
 
-First-class sequence objects — more flexible than `AUTO_INCREMENT`.
+Available since MariaDB 10.3. First-class sequence objects — more flexible than `AUTO_INCREMENT`.
 
 ```sql
 CREATE SEQUENCE order_seq START WITH 1000 INCREMENT BY 1;
@@ -90,7 +92,7 @@ Available since MariaDB 10.4. Use `ALGORITHM=INSTANT` explicitly; fall back to `
 
 ## INet4 and INet6 Data Types
 
-Native IP address storage with correct comparison and indexing.
+Available since MariaDB 10.5. Native IP address storage with correct comparison and indexing.
 
 ```sql
 CREATE TABLE connections (
@@ -110,7 +112,7 @@ SELECT * FROM connections WHERE client_ip BETWEEN INet6('10.0.0.0') AND INet6('1
 
 ## Oracle Compatibility Mode
 
-`sql_mode=ORACLE` enables PL/SQL syntax, Oracle-compatible NULL handling, packages, and Oracle-style functions — useful when migrating from Oracle or supporting Oracle-experienced developers.
+Available since MariaDB 10.3. `sql_mode=ORACLE` enables PL/SQL syntax, Oracle-compatible NULL handling, packages, and Oracle-style functions — useful when migrating from Oracle or supporting Oracle-experienced developers.
 
 ```sql
 SET sql_mode=ORACLE;
@@ -124,7 +126,7 @@ Not a complete Oracle replacement, but significantly reduces migration friction.
 
 ## FLASHBACK
 
-Roll back individual tables or rows to a previous point in time using the binary log — without restoring a full backup.
+Available since MariaDB 10.2. Roll back individual tables or rows to a previous point in time using the binary log — without restoring a full backup.
 
 ```sql
 -- Show what a table looked like 1 hour ago:
@@ -136,26 +138,26 @@ Requires binary logging enabled. Useful for recovering from accidental deletes o
 ## More MariaDB Features
 
 ### SQL & Schema
-- **Invisible columns** — hidden from `SELECT *`, still writable; useful for schema evolution without breaking existing queries
+- **Invisible columns** (10.3+) — hidden from `SELECT *`, still writable; useful for schema evolution without breaking existing queries
 - **`DEFAULT` expressions on BLOB/TEXT** — not supported in MySQL
 - **`DECIMAL` precision to 38 digits** — MySQL stops at 30
-- **`INTERSECT` and `EXCEPT`** — set operators not available in MySQL
+- **`INTERSECT` and `EXCEPT`** (10.3+) — set operators not available in MySQL
 - **`LIMIT` in subqueries** — supported; MySQL restricts this
 - **`SELECT ... OFFSET ... FETCH`** — SQL standard syntax for pagination
-- **Dynamic columns** — schema-less key/value storage inside a single column
+- **Dynamic columns** (5.3+) — schema-less key/value storage inside a single column
 - **`SFORMAT()`** — string formatting function
 
 ### Storage Engines
 - **ColumnStore** — columnar engine for analytical/data warehouse workloads
 - **Aria** — crash-safe MyISAM replacement, used internally for temp tables
-- **MyRocks** — RocksDB-based, optimized for write-heavy workloads with compression
+- **MyRocks** (10.2+) — RocksDB-based, optimized for write-heavy workloads with compression
 - **CONNECT** — query external data sources (CSV, JDBC, ODBC, MongoDB) as SQL tables
 - **Spider** — sharding across multiple MariaDB instances
 
 ### Security & Auth
 - **`unix_socket` authentication** — authenticate OS users without passwords
 - **ED25519 plugin** — modern authentication alternative to SHA1-based plugins
-- **Role-based access control** — roles available before MySQL added them
+- **Role-based access control** (10.0+) — roles available before MySQL added them
 - **SSL enabled by default** — no configuration required
 - **Table-level encryption** — encrypt individual tables, not just the whole datadir
 - **HashiCorp Vault integration** — key management plugin
