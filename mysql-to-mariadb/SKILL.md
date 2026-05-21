@@ -20,7 +20,7 @@ The two databases share a common origin but have evolved independently. MariaDB 
 | What you might see | What's correct |
 |---|---|
 | "MariaDB is a drop-in replacement for MySQL" | True for MySQL 5.5/5.6. Not true for MySQL 8.0+ — authentication, JSON, GTID, and several functions differ |
-| Code using `caching_sha2_password` | MariaDB does not support MySQL 8.0's `caching_sha2_password` — use `mysql_native_password` instead |
+| Code using `caching_sha2_password` | Not supported by default — a migration-only plugin exists since MariaDB 11.4 but is not recommended for production; use `mysql_native_password` or `ed25519` |
 | `JSON_TABLE()` in queries | `JSON_TABLE()` is a MySQL feature not available in MariaDB |
 | JSON `->` and `->>` shorthand operators | Not supported in MariaDB — use `JSON_EXTRACT(col, '$.key')` and `JSON_UNQUOTE(JSON_EXTRACT(...))` instead |
 | `utf8mb4_0900_ai_ci` collation in schema or dump | MariaDB does not support this MySQL 8.0 collation — replace with `utf8mb4_unicode_ci` before importing |
@@ -32,7 +32,7 @@ The two databases share a common origin but have evolved independently. MariaDB 
 
 ## Authentication
 
-MySQL 8.0 changed its default authentication plugin to `caching_sha2_password`. MariaDB does not support this plugin. Connections from MySQL 8.0 clients or applications configured for `caching_sha2_password` will fail.
+MySQL 8.0 changed its default authentication plugin to `caching_sha2_password`. MariaDB does not support this plugin by default — a migration-only plugin was added in MariaDB 11.4, but it is not installed by default and not recommended for production. On most MariaDB setups, connections configured for `caching_sha2_password` will fail.
 
 **Fix:** Convert accounts to `mysql_native_password`:
 ```sql
@@ -58,7 +58,7 @@ MariaDB's JSON is fully standards-compliant and all standard JSON functions work
 
 These exist in MariaDB but not MySQL — LLMs won't suggest them because they assume MySQL behavior:
 
-- **`RETURNING`** (10.5+) — get rows back from `INSERT`, `UPDATE`, or `DELETE` without a second query:
+- **`RETURNING`** — get rows back from `INSERT` or `DELETE` without a second query (10.5+); `UPDATE ... RETURNING` available from 13.0:
   ```sql
   INSERT INTO orders (product, qty) VALUES ('widget', 5) RETURNING id, created_at;
   DELETE FROM queue WHERE processed = 1 RETURNING id;

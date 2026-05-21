@@ -83,7 +83,13 @@ Without this, PL/SQL syntax, Oracle data type synonyms, and Oracle-style functio
 | `TO_NUMBER()` | 12.2 |
 
 ### NULL Handling
-Oracle treats empty strings as `NULL`. `sql_mode=ORACLE` activates `EMPTY_STRING_IS_NULL`, matching this behavior. Without Oracle mode, `''` is not `NULL` in MariaDB.
+Oracle treats empty strings as `NULL`. `sql_mode=ORACLE` does **not** activate this automatically — `EMPTY_STRING_IS_NULL` must be added separately:
+
+```sql
+SET sql_mode = 'ORACLE,EMPTY_STRING_IS_NULL';
+```
+
+Without `EMPTY_STRING_IS_NULL`, `''` is not `NULL` in MariaDB even in Oracle mode.
 
 ### Other Automatic Behaviors
 - `||` as string concatenation (NULL-ignoring)

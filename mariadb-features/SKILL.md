@@ -56,13 +56,9 @@ INSERT INTO orders (product, qty) VALUES ('widget', 5)
 -- Get deleted rows for logging:
 DELETE FROM queue WHERE processed = 1
     RETURNING id, payload;
-
--- Get updated values:
-UPDATE inventory SET stock = stock - 1 WHERE product_id = 42
-    RETURNING product_id, stock;
 ```
 
-Available since MariaDB 10.5.
+`INSERT ... RETURNING` and `DELETE ... RETURNING` available since MariaDB 10.5. `UPDATE ... RETURNING` available since MariaDB 13.0.
 
 ## Sequences
 
@@ -127,14 +123,14 @@ Not a complete Oracle replacement, but significantly reduces migration friction.
 
 ## FLASHBACK
 
-Available since MariaDB 10.2. Roll back individual tables or rows to a previous point in time using the binary log — without restoring a full backup.
+Available since MariaDB 10.2. Roll back tables to a previous state using the binary log — without restoring a full backup. Flashback is implemented via the `mariadb-binlog` utility, not a SQL statement:
 
-```sql
--- Show what a table looked like 1 hour ago:
-FLASHBACK TABLE orders TO BEFORE '2025-05-18 10:00:00';
+```bash
+# Generate reverse SQL from the binary log and pipe it back to MariaDB:
+mariadb-binlog --flashback --start-datetime="2026-05-18 10:00:00" /var/log/mysql/mysql-bin.000001 | mariadb
 ```
 
-Requires binary logging enabled. Useful for recovering from accidental deletes or bad migrations.
+Requires binary logging enabled (`log_bin`). Useful for recovering from accidental deletes or bad migrations.
 
 ## More MariaDB Features
 

@@ -37,10 +37,10 @@ EXPLAIN SELECT * FROM orders WHERE customer_id = 42 ORDER BY created_at DESC LIM
 | `Extra` | `Using temporary` | Temp table created — often from `GROUP BY` or `DISTINCT` |
 | `Extra` | `Using index` | ✅ Good — covering index, no table row access needed |
 
-**`EXPLAIN ANALYZE`** (MariaDB 10.9+) actually executes the query and shows real row counts vs. estimates — more reliable than `EXPLAIN` alone for identifying estimation errors:
+**`ANALYZE`** statement (MariaDB 10.1+) actually executes the query and shows real row counts vs. estimates — more reliable than `EXPLAIN` alone. Note: MariaDB uses `ANALYZE`, not `EXPLAIN ANALYZE`:
 
 ```sql
-EXPLAIN ANALYZE SELECT * FROM orders WHERE customer_id = 42;
+ANALYZE SELECT * FROM orders WHERE customer_id = 42;
 ```
 
 ## Indexing Rules
