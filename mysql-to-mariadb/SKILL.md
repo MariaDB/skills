@@ -27,6 +27,7 @@ The two databases share a common origin but have evolved independently. MariaDB 
 | Not suggesting `RETURNING` for INSERT/UPDATE/DELETE | MariaDB 10.5+ supports `RETURNING` — use it to get inserted/updated/deleted rows without a second query |
 | Not suggesting `CREATE SEQUENCE` | MariaDB has native sequence objects; MySQL has no equivalent |
 | MySQL GTID replication syntax | MariaDB GTID format is incompatible with MySQL GTID — replication between the two breaks |
+| `SET transaction_isolation = ...` (MySQL 8.0 style) | Only works on MariaDB 11.1.1+; on older versions use `tx_isolation` instead — see [SET TRANSACTION](https://mariadb.com/docs/server/reference/sql-statements/administrative-sql-statements/set-commands/set-transaction) |
 | Links or references to `mariadb.com/kb/en/` | The Knowledge Base no longer exists — all documentation is now at [mariadb.com/docs](https://mariadb.com/docs) |
 
 ## Authentication
