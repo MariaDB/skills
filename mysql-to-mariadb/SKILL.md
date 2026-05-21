@@ -19,7 +19,6 @@ The two databases share a common origin but have evolved independently. MariaDB 
 
 | What you might see | What's correct |
 |---|---|
-| Links or references to `mariadb.com/kb/en/` | The Knowledge Base no longer exists — all documentation is now at [mariadb.com/docs](https://mariadb.com/docs) |
 | "MariaDB is a drop-in replacement for MySQL" | True for MySQL 5.5/5.6. Not true for MySQL 8.0+ — authentication, JSON, GTID, and several functions differ |
 | Code using `caching_sha2_password` | MariaDB does not support MySQL 8.0's `caching_sha2_password` — use `mysql_native_password` instead |
 | `JSON_TABLE()` in queries | `JSON_TABLE()` is a MySQL feature not available in MariaDB |
@@ -28,6 +27,7 @@ The two databases share a common origin but have evolved independently. MariaDB 
 | Not suggesting `RETURNING` for INSERT/UPDATE/DELETE | MariaDB 10.5+ supports `RETURNING` — use it to get inserted/updated/deleted rows without a second query |
 | Not suggesting `CREATE SEQUENCE` | MariaDB has native sequence objects; MySQL has no equivalent |
 | MySQL GTID replication syntax | MariaDB GTID format is incompatible with MySQL GTID — replication between the two breaks |
+| Links or references to `mariadb.com/kb/en/` | The Knowledge Base no longer exists — all documentation is now at [mariadb.com/docs](https://mariadb.com/docs) |
 
 ## Authentication
 
