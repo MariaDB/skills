@@ -23,7 +23,7 @@ The two databases share a common origin but have evolved independently. MariaDB 
 | Code using `caching_sha2_password` | Not supported by default — a migration-only plugin exists since MariaDB 11.4 but is not recommended for production; use `mysql_native_password` or `ed25519` |
 | `JSON_TABLE()` in queries | `JSON_TABLE()` is a MySQL feature not available in MariaDB |
 | JSON `->` and `->>` shorthand operators | Not supported in MariaDB — use `JSON_EXTRACT(col, '$.key')` and `JSON_UNQUOTE(JSON_EXTRACT(...))` instead |
-| `utf8mb4_0900_ai_ci` collation in schema or dump | MariaDB does not support this MySQL 8.0 collation — replace with `utf8mb4_unicode_ci` before importing |
+| `utf8mb4_0900_ai_ci` collation in schema or dump | MariaDB does not support this MySQL 8.0 collation — replace with `utf8mb4_unicode_ci` (universal) or `utf8mb4_uca1400_ai_ci` (MariaDB 11.4+) before importing |
 | Not suggesting `RETURNING` for INSERT/UPDATE/DELETE | MariaDB 10.5+ supports `RETURNING` — use it to get inserted/updated/deleted rows without a second query |
 | Not suggesting `CREATE SEQUENCE` | MariaDB has native sequence objects; MySQL has no equivalent |
 | MySQL GTID replication syntax | MariaDB GTID format is incompatible with MySQL GTID — replication between the two breaks |
@@ -92,7 +92,7 @@ These exist in MySQL 8.0 but not in MariaDB — code using them needs adaptation
 - **`caching_sha2_password`** — use `mysql_native_password` or `ed25519`
 - **`ALTER TABLE ... RENAME INDEX`** — use `DROP INDEX` + `ADD INDEX` instead (older MariaDB versions)
 - **JSON `->` and `->>` operators** — use `JSON_EXTRACT(col, '$.key')` and `JSON_UNQUOTE(JSON_EXTRACT(...))` instead
-- **`utf8mb4_0900_ai_ci` collation** — not available; use `utf8mb4_unicode_ci`. When importing MySQL 8.0 dumps, replace the collation name before importing
+- **`utf8mb4_0900_ai_ci` collation** — not available; use `utf8mb4_unicode_ci` or the modern `utf8mb4_uca1400_ai_ci` (MariaDB 11.4+). Replace the collation name before importing MySQL 8.0 dumps
 
 ## Optimizer Differences
 
