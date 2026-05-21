@@ -114,7 +114,7 @@ MariaDB and MySQL use different query optimizers with different cost models. Ide
 - [MariaDB vs MySQL Compatibility — MariaDB Docs](https://mariadb.com/docs/release-notes/community-server/about/compatibility-and-differences/mariadb-vs-mysql-compatibility)
 - [Moving from MySQL to MariaDB — MariaDB Docs](https://mariadb.com/docs/server/server-management/install-and-upgrade-mariadb/migrating-to-mariadb/moving-from-mysql/)
 - [MDEV-28906 — MySQL 8.0 desired compatibility (Jira epic)](https://jira.mariadb.org/browse/MDEV-28906) — lists individual MySQL 8.0 features not yet in MariaDB
-- [RETURNING — MariaDB KB](https://mariadb.com/kb/en/returning/)
-- [CREATE SEQUENCE — MariaDB KB](https://mariadb.com/kb/en/create-sequence/)
-- [System-Versioned Tables — MariaDB KB](https://mariadb.com/kb/en/system-versioned-tables/)
-- [Authentication Plugins — MariaDB KB](https://mariadb.com/kb/en/authentication-plugins/)
+- [RETURNING — MariaDB KB](https://mariadb.com/docs/server/reference/sql-statements/data-manipulation/inserting-loading-data/insertreturning)
+- [CREATE SEQUENCE — MariaDB KB](https://mariadb.com/docs/server/reference/sql-structure/sequences/create-sequence)
+- [System-Versioned Tables — MariaDB KB](https://mariadb.com/docs/server/reference/sql-structure/temporal-tables/system-versioned-tables)
+- [Authentication Plugins — MariaDB KB](https://mariadb.com/docs/server/reference/plugins/authentication-plugins)
