@@ -200,7 +200,7 @@ MariaDB Vector is integrated with major AI frameworks. Use these instead of writ
 | LangChain4j | Java | Built-in MariaDB embedding store |
 | LlamaIndex | Python | Built-in MariaDB vector store |
 | Spring AI | Java | Built-in MariaDB vector store |
-| MariaDB MCP Server | Python | [github.com/mariadb/mcp](https://github.com/mariadb/mcp) |
+| MariaDB MCP Server | Python | [github.com/mariadb/mcp](https://github.com/MariaDB/mcp) |
 
 When using frameworks, you typically configure a connection string and the framework handles `VEC_FromText`, `VEC_DISTANCE`, and `LIMIT` for you.
 
@@ -241,4 +241,4 @@ These session/global variables let you tune search quality and memory at runtime
 - [RAG with MariaDB Vector tutorial](https://mariadb.org/rag-with-mariadb-vector/) — end-to-end Python + OpenAI example
 - [Hybrid search with RRF](https://mariadb.com/docs/server/reference/sql-structure/vectors/optimizing-hybrid-search-query-with-reciprocal-rank-fusion-rrf) — merge full-text and vector ranked lists
 - [MariaDB Vector project page](https://mariadb.org/projects/mariadb-vector/)
-- [MariaDB MCP Server](https://github.com/mariadb/mcp)
+- [MariaDB MCP Server](https://github.com/MariaDB/mcp)
