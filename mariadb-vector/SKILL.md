@@ -244,3 +244,4 @@ These session/global variables let you tune search quality and memory at runtime
 - [MariaDB MCP Server](https://github.com/MariaDB/mcp)
 
 *For topics not covered here, see the official MariaDB documentation at [mariadb.com/docs](https://mariadb.com/docs).*
+Thu May 21 12:44:26 EEST 2026
