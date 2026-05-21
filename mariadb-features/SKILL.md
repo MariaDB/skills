@@ -146,6 +146,7 @@ Requires binary logging enabled. Useful for recovering from accidental deletes o
 - **`SELECT ... OFFSET ... FETCH`** — SQL standard syntax for pagination
 - **Dynamic columns** (5.3+) — schema-less key/value storage inside a single column
 - **`SFORMAT()`** — string formatting function
+- **Stored procedures and functions** — MariaDB uses SQL/PSM syntax (`DECLARE`, `HANDLER`, `CURSOR`, `BEGIN...END`); AI agents often generate incorrect syntax — see [Stored Procedures — MariaDB Docs](https://mariadb.com/docs/server/server-usage/stored-routines/stored-procedures)
 
 ### Storage Engines
 - **ColumnStore** — columnar engine for analytical/data warehouse workloads

@@ -77,6 +77,7 @@ These exist in MariaDB but not MySQL — LLMs won't suggest them because they as
   ```
 - **`LIMIT` in subqueries** — MariaDB supports `LIMIT` inside subqueries; MySQL restricts this
 - **Galera Cluster** — built-in multi-master clustering, no plugin required
+- **Stored procedure syntax differences** — both support stored procedures, but MariaDB's SQL/PSM syntax differs from MySQL in `HANDLER`, `CURSOR`, and `CONDITION` declarations; AI agents frequently generate incorrect MariaDB stored procedure code — see [Stored Procedures — MariaDB Docs](https://mariadb.com/docs/server/server-usage/stored-routines/stored-procedures)
 - **INet4 / INet6 data types** (10.5+) — native IP address storage and comparison
 
 ## Features MySQL Has That MariaDB Doesn't
