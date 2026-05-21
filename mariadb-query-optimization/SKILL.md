@@ -5,7 +5,7 @@ description: "Best practices for query optimization in MariaDB — indexing stra
 
 # MariaDB Query Optimization
 
-*Last updated: 2026-05-19*
+*Last updated: 2026-05-21*
 
 ## What LLMs Get Wrong
 

@@ -5,7 +5,7 @@ description: "Best practices for MariaDB system-versioned (temporal) tables — 
 
 # MariaDB System-Versioned Tables
 
-*Last updated: 2026-05-19*
+*Last updated: 2026-05-21*
 
 System-versioned tables automatically record the full history of every row change — no triggers, no application logic, no separate audit tables. MariaDB tracks what the data looked like at any point in the past, built directly into the storage engine.
 

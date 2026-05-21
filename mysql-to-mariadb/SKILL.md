@@ -5,7 +5,7 @@ description: "Compatibility guide for developers moving from MySQL to MariaDB, a
 
 # MySQL to MariaDB Migration Guide
 
-*Last updated: 2026-05-19*
+*Last updated: 2026-05-21*
 
 ## Critical: MariaDB Is Not a Drop-In Replacement for MySQL 8.0
 

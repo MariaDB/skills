@@ -5,7 +5,7 @@ description: "Compatibility guide for developers migrating from Oracle Database 
 
 # Oracle to MariaDB Migration Guide
 
-*Last updated: 2026-05-19*
+*Last updated: 2026-05-21*
 
 ## Why MariaDB for Oracle Migration
 

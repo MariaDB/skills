@@ -5,7 +5,7 @@ description: "How to connect AI agents to MariaDB using the Model Context Protoc
 
 # MariaDB MCP Server
 
-*Last updated: 2026-05-19*
+*Last updated: 2026-05-21*
 
 The Model Context Protocol (MCP) lets AI agents connect to external tools and data sources. The MariaDB MCP Server gives agents direct, controlled access to a MariaDB database — reading schemas, running queries, and optionally performing vector/semantic search — without requiring the developer to write integration code.
 
