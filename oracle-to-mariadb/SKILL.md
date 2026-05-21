@@ -93,7 +93,7 @@ Without `EMPTY_STRING_IS_NULL`, `''` is not `NULL` in MariaDB even in Oracle mod
 
 ### Other Automatic Behaviors
 - `||` as string concatenation (NULL-ignoring)
-- `MINUS` as synonym for `EXCEPT`
+- `MINUS` as synonym for `EXCEPT` (10.6+)
 - Named placeholders (`:1`, `:2`) in prepared statements
 - `SELECT UNIQUE` as synonym for `SELECT DISTINCT`
 - `DUAL` table support

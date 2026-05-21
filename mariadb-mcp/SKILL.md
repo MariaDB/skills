@@ -64,7 +64,7 @@ claude mcp add mariadb -- uvx mcp-server-mariadb \
   --database mydatabase
 ```
 
-Or configure in `.claude/mcp.json`:
+Or configure in `.mcp.json` at the project root (project-scoped, shared with collaborators):
 ```json
 {
   "mcpServers": {
