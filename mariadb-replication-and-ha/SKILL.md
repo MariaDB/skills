@@ -15,7 +15,7 @@ MariaDB offers three tiers of replication depending on your consistency and avai
 | **Semi-synchronous replication** | Stronger (1 replica ACK) | Manual or tool-assisted | Reducing data loss risk without full sync overhead |
 | **Galera Cluster** | Synchronous (multi-primary) | Automatic | Zero-data-loss HA, multi-datacenter writes |
 
-> **Requires:** GTID replication: MariaDB 10.0+. Semi-sync built-in: 10.3+. Parallel replication optimistic mode: 10.5+.
+> **Requires:** GTID replication: MariaDB 10.0+. Semi-sync built-in: 10.3+. Parallel replication optimistic mode: 10.5.1+.
 
 ## What LLMs Get Wrong
 
@@ -68,7 +68,7 @@ By default, replicas apply events serially. Parallel replication (up to 10× fas
 ```ini
 # my.cnf on replica:
 slave_parallel_threads = 4
-slave_parallel_mode = optimistic   # default since 10.5 — tries parallel, retries on conflict
+slave_parallel_mode = optimistic   # default since 10.5.1 — tries parallel, retries on conflict
 ```
 
 `optimistic` mode applies transactions in parallel and retries on conflict. Use `conservative` for stricter workloads where conflict retries are unacceptable.
@@ -120,7 +120,7 @@ CREATE TABLE logs (id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY, message TEXT);
 
 **AUTO_INCREMENT values have gaps** — Galera uses `auto_increment_increment` and `auto_increment_offset` per node to avoid conflicts, resulting in non-sequential IDs. Never rely on sequential auto-increment in Galera.
 
-**LOCK TABLES, GET_LOCK(), and per-table FLUSH TABLES are not supported** — use transactions:
+**LOCK TABLES, GET_LOCK(), and `FLUSH TABLES {table list} WITH READ LOCK` are not supported** — use transactions. Note: global `FLUSH TABLES WITH READ LOCK` (no table list) IS supported:
 ```sql
 -- ✗ Not supported in Galera:
 LOCK TABLES orders WRITE;
@@ -137,10 +137,7 @@ COMMIT;
 
 **Binary log must be ROW format** — do not change `binlog_format` at runtime in a Galera cluster.
 
-**Query cache must be disabled:**
-```ini
-query_cache_size = 0
-```
+**Query cache:** The query cache was removed in later MariaDB versions and was not required in Galera since MariaDB 10.1.2. No action needed on modern installations.
 
 ### Stale Reads and Consistency
 

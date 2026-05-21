@@ -80,7 +80,7 @@ Without this, PL/SQL syntax, Oracle data type synonyms, and Oracle-style functio
 | `TO_CHAR()` | 10.6 |
 | `SYS_GUID()` | 10.6 |
 | `ROWNUM` | 10.6 |
-| `TO_NUMBER()` | 12.2 |
+| `TO_NUMBER()` | 12.2.1 |
 
 ### NULL Handling
 Oracle treats empty strings as `NULL`. `sql_mode=ORACLE` does **not** activate this automatically — `EMPTY_STRING_IS_NULL` must be added separately:

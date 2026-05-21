@@ -51,6 +51,8 @@ uv run server.py
 
 ## Connecting to Claude Code
 
+The `uvx mcp-server-mariadb` command below uses a third-party PyPI package (`mcp-server-mariadb`), not the official `github.com/MariaDB/mcp` repo. Verify which you want before proceeding — the official repo uses `uv run server.py` from a local clone (see Installation above).
+
 Add the MCP server to Claude Code with:
 
 ```bash
