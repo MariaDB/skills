@@ -144,3 +144,5 @@ These Oracle features have no direct equivalent and require code changes:
 - [MariaDB vs PostgreSQL for Oracle Migration — mariadb.com](https://mariadb.com/products/enterprise/comparison/mariadb-vs-postgresql/)
 - [Migration from Oracle to MariaDB Deep Dive — Severalnines](https://severalnines.com/blog/migration-oracle-database-mariadb-deep-dive/)
 - [Data migration from Oracle to MariaDB with Connect SE — mariadb.org](https://mariadb.org/data-migration-from-oracle-to-mariadb-with-docker-and-connect-se-a-step-by-step-guide/)
+
+*For topics not covered here, see the official MariaDB documentation at [mariadb.com/docs](https://mariadb.com/docs).*

@@ -242,3 +242,5 @@ These session/global variables let you tune search quality and memory at runtime
 - [Hybrid search with RRF](https://mariadb.com/docs/server/reference/sql-structure/vectors/optimizing-hybrid-search-query-with-reciprocal-rank-fusion-rrf) — merge full-text and vector ranked lists
 - [MariaDB Vector project page](https://mariadb.org/projects/mariadb-vector/)
 - [MariaDB MCP Server](https://github.com/MariaDB/mcp)
+
+*For topics not covered here, see the official MariaDB documentation at [mariadb.com/docs](https://mariadb.com/docs).*

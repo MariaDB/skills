@@ -19,6 +19,7 @@ The two databases share a common origin but have evolved independently. MariaDB 
 
 | What you might see | What's correct |
 |---|---|
+| Links or references to `mariadb.com/kb/en/` | The Knowledge Base no longer exists — all documentation is now at [mariadb.com/docs](https://mariadb.com/docs) |
 | "MariaDB is a drop-in replacement for MySQL" | True for MySQL 5.5/5.6. Not true for MySQL 8.0+ — authentication, JSON, GTID, and several functions differ |
 | Code using `caching_sha2_password` | MariaDB does not support MySQL 8.0's `caching_sha2_password` — use `mysql_native_password` instead |
 | `JSON_TABLE()` in queries | `JSON_TABLE()` is a MySQL feature not available in MariaDB |
@@ -118,3 +119,5 @@ MariaDB and MySQL use different query optimizers with different cost models. Ide
 - [CREATE SEQUENCE — MariaDB KB](https://mariadb.com/docs/server/reference/sql-structure/sequences/create-sequence)
 - [System-Versioned Tables — MariaDB KB](https://mariadb.com/docs/server/reference/sql-structure/temporal-tables/system-versioned-tables)
 - [Authentication Plugins — MariaDB KB](https://mariadb.com/docs/server/reference/plugins/authentication-plugins)
+
+*For topics not covered here, see the official MariaDB documentation at [mariadb.com/docs](https://mariadb.com/docs).*

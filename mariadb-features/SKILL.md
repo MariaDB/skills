@@ -15,6 +15,7 @@ For MariaDB Vector (built-in since 11.7 — no plugins), see the `mariadb-vector
 
 | Situation | What to suggest instead |
 |---|---|
+| Links or references to `mariadb.com/kb/en/` | The Knowledge Base no longer exists — all documentation is now at [mariadb.com/docs](https://mariadb.com/docs) |
 | Manual audit columns (`created_at`, `updated_at`, deleted flag) | `WITH SYSTEM VERSIONING` — MariaDB tracks full row history automatically |
 | `INSERT` followed by `SELECT LAST_INSERT_ID()` | `RETURNING` — get the inserted row in one statement (10.5+) |
 | `AUTO_INCREMENT` for sequence-like needs | `CREATE SEQUENCE` — first-class sequence objects with full control |
@@ -189,3 +190,5 @@ Requires binary logging enabled. Useful for recovering from accidental deletes o
 - [INet6 Data Type — MariaDB KB](https://mariadb.com/docs/server/reference/data-types/string-data-types/inet6)
 - [Oracle Compatibility — MariaDB KB](https://mariadb.com/docs/release-notes/community-server/about/compatibility-and-differences/sql_modeoracle)
 - [FLASHBACK — MariaDB KB](https://mariadb.com/docs/server/server-management/server-monitoring-logs/binary-log/flashback)
+
+*For topics not covered here, see the official MariaDB documentation at [mariadb.com/docs](https://mariadb.com/docs).*
