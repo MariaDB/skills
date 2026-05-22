@@ -21,9 +21,9 @@ The two databases share a common origin but have evolved independently. MariaDB 
 |---|---|
 | "MariaDB is a drop-in replacement for MySQL" | True for MySQL 5.5/5.6. Not true for MySQL 8.0+ — authentication, JSON, GTID, and several functions differ |
 | Code using `caching_sha2_password` | Not supported by default — a migration-only plugin exists since MariaDB 11.4 but is not recommended for production; use `mysql_native_password` or `ed25519` |
-| `JSON_TABLE()` in queries | `JSON_TABLE()` is a MySQL feature not available in MariaDB |
+| `JSON_TABLE()` in queries | Available in MariaDB since 10.6 — not available before 10.6 |
 | JSON `->` and `->>` shorthand operators | Not supported in MariaDB — use `JSON_EXTRACT(col, '$.key')` and `JSON_UNQUOTE(JSON_EXTRACT(...))` instead |
-| `utf8mb4_0900_ai_ci` collation in schema or dump | MariaDB does not support this MySQL 8.0 collation — replace with `utf8mb4_unicode_ci` (universal) or `utf8mb4_uca1400_ai_ci` (MariaDB 11.4+) before importing |
+| `utf8mb4_0900_ai_ci` collation in schema or dump | Supported since MariaDB 11.4.5 (as alias for `utf8mb4_uca1400_nopad_ai_ci`). On older versions replace with `utf8mb4_unicode_ci` before importing |
 | Not suggesting `RETURNING` for INSERT/UPDATE/DELETE | MariaDB 10.5+ supports `RETURNING` — use it to get inserted/updated/deleted rows without a second query |
 | Not suggesting `CREATE SEQUENCE` | MariaDB has native sequence objects; MySQL has no equivalent |
 | MySQL GTID replication syntax | MariaDB GTID format is incompatible with MySQL GTID — replication between the two breaks |
@@ -86,13 +86,13 @@ These exist in MariaDB but not MySQL — LLMs won't suggest them because they as
 
 These exist in MySQL 8.0 but not in MariaDB — code using them needs adaptation:
 
-- **`JSON_TABLE()`** — rewrite using MariaDB JSON functions or application-level parsing
+- **`JSON_TABLE()`** — available since MariaDB 10.6; on older versions rewrite using MariaDB JSON functions or application-level parsing
 - **`sys` schema** — not available; use `information_schema` and `performance_schema` directly
 - **`UUID` data type** — use `CHAR(36)` or `BINARY(16)` instead
 - **`caching_sha2_password`** — use `mysql_native_password` or `ed25519`
 - **`ALTER TABLE ... RENAME INDEX`** — use `DROP INDEX` + `ADD INDEX` instead (older MariaDB versions)
 - **JSON `->` and `->>` operators** — use `JSON_EXTRACT(col, '$.key')` and `JSON_UNQUOTE(JSON_EXTRACT(...))` instead
-- **`utf8mb4_0900_ai_ci` collation** — not available; use `utf8mb4_unicode_ci` or the modern `utf8mb4_uca1400_ai_ci` (MariaDB 11.4+). Replace the collation name before importing MySQL 8.0 dumps
+- **`utf8mb4_0900_ai_ci` collation** — supported since MariaDB 11.4.5 (alias for `utf8mb4_uca1400_nopad_ai_ci`); on older versions replace with `utf8mb4_unicode_ci` before importing
 
 ## Optimizer Differences
 

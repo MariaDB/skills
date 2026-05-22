@@ -37,7 +37,7 @@ Without this, PL/SQL syntax, Oracle data type synonyms, and Oracle-style functio
 | Oracle `DATE` mapped to MariaDB `DATE` | Oracle `DATE` stores date AND time — map to `DATETIME`, not `DATE` |
 | Assuming 100% PL/SQL compatibility | ~80% works without changes; `SYNONYM`, `INSERT ALL`, `(+)` joins, `CONNECT BY` require rewrites |
 | `SYNONYM` usage in schema or code | No equivalent in MariaDB — replace with views or direct object references |
-| `(+)` outer join notation | Not supported — rewrite as `LEFT JOIN` / `RIGHT JOIN` ANSI syntax |
+| `(+)` outer join notation | Supported since MariaDB 12.1 in Oracle mode — on older versions rewrite as `LEFT JOIN` / `RIGHT JOIN` |
 | `START WITH ... CONNECT BY` | Not supported — rewrite as recursive CTE using `WITH RECURSIVE` |
 | `TIMESTAMP WITH TIME ZONE` | Loses timezone on migration — becomes `DATETIME`; handle timezone in application |
 
@@ -104,7 +104,7 @@ These Oracle features have no direct equivalent and require code changes:
 
 - **`SYNONYM`** — replace with views (`CREATE VIEW`) or update object references directly
 - **`INSERT ALL` / `INSERT FIRST`** — rewrite as multiple `INSERT` statements or application logic
-- **`(+)` outer join syntax** — rewrite as `LEFT JOIN` / `RIGHT JOIN`:
+- **`(+)` outer join syntax** — supported natively since MariaDB 12.1 in Oracle mode. On older versions rewrite as `LEFT JOIN` / `RIGHT JOIN`:
   ```sql
   -- Oracle:
   SELECT * FROM a, b WHERE a.id = b.id(+);
