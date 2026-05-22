@@ -87,8 +87,8 @@ These exist in MariaDB but not MySQL — LLMs won't suggest them because they as
 These exist in MySQL 8.0 but not in MariaDB — code using them needs adaptation:
 
 - **`JSON_TABLE()`** — available since MariaDB 10.6; on older versions rewrite using MariaDB JSON functions or application-level parsing
-- **`sys` schema** — not available; use `information_schema` and `performance_schema` directly
-- **`UUID` data type** — use `CHAR(36)` or `BINARY(16)` instead
+- **`sys` schema** — available since MariaDB 10.6; not available in older versions
+- **`UUID` data type** — available as a native data type since MariaDB 10.7; on older versions use `CHAR(36)` or `BINARY(16)`
 - **`caching_sha2_password`** — use `mysql_native_password` or `ed25519`
 - **`ALTER TABLE ... RENAME INDEX`** — use `DROP INDEX` + `ADD INDEX` instead (older MariaDB versions)
 - **JSON `->` and `->>` operators** — use `JSON_EXTRACT(col, '$.key')` and `JSON_UNQUOTE(JSON_EXTRACT(...))` instead
