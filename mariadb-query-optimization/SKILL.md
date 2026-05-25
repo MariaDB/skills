@@ -5,14 +5,14 @@ description: "Best practices for query optimization in MariaDB — indexing stra
 
 # MariaDB Query Optimization
 
-*Last updated: 2026-05-21*
+*Last updated: 2026-05-25*
 
 ## What LLMs Get Wrong
 
 | Pattern | What to do instead |
 |---|---|
 | `SELECT * FROM table LIMIT 10 OFFSET 50000` | Use cursor-based pagination — `OFFSET` scans all skipped rows |
-| Functions on indexed columns: `WHERE YEAR(created_at) = 2025` | Rewrite to use the index: `WHERE created_at >= '2025-01-01' AND created_at < '2026-01-01'` |
+| Blanket rule "functions on indexed columns kill indexes" | Outdated on MariaDB 11.1+/11.3+ for many cases. `YEAR(col) = const` and `UPPER(col) = const` on case-insensitive columns can now use indexes — see [Functions on indexed columns](#functions-on-indexed-columns) below |
 | Adding an index to a low-cardinality column (boolean, status with 2-3 values) | Optimizer skips indexes with low selectivity and does a table scan anyway |
 | Not running `ANALYZE TABLE` after bulk inserts | Histogram statistics become stale; optimizer makes poor plan choices |
 | Composite index `(a, b, c)` used in `WHERE b = 1 AND c = 2` | Leftmost prefix rule: this skips `a`, so the index is not used |
@@ -87,19 +87,26 @@ CREATE INDEX idx_customer_cover ON orders (customer_id, status, created_at);
 - **Small tables** (< a few thousand rows): full scans are faster than index lookups for tiny tables.
 - **Write-heavy columns**: every index slows `INSERT`, `UPDATE`, `DELETE` — don't index columns that are rarely queried.
 
-### Functions on Indexed Columns Kill Indexes
+### Functions on Indexed Columns
+
+The classic rule "any function on an indexed column disables the index" is **outdated for MariaDB 11.1+ and 11.4 LTS**. The optimizer can now use indexes for a number of common function patterns:
+
+| Pattern | Works on the index? | Since |
+|---|---|---|
+| `WHERE YEAR(col) = 2025` | ✅ — sargable, picks the right range | 11.1+ (MDEV-8320) |
+| `WHERE DATE(col) <= '2025-12-31'` | ✅ — sargable | 11.1+ (MDEV-8320) |
+| `WHERE UPPER(varchar_col) = '...'` on a case-insensitive collation (e.g. `utf8mb4_uca1400_ai_ci`) | ✅ — `sargable_casefold=ON` is the default | 11.3+ (MDEV-31496) |
+| `WHERE SUBSTR(col, 1, n) = 'abc'` | ✅ — leading-prefix `SUBSTR` is optimized | 11.8+ (MDEV-34911) |
+| `WHERE LOWER(case_sensitive_col) = '...'` | ✗ — index not used (collation isn't case-insensitive) | — |
+| `WHERE CAST(col AS UNSIGNED) = 1` or other type-changing transforms | ✗ — index not used | — |
+
+For cases that the optimizer still can't sargabilize, the rewrite-to-range pattern remains valid:
 
 ```sql
--- ✗ Index on created_at is not used:
-WHERE YEAR(created_at) = 2025
-WHERE DATE(created_at) = '2025-06-01'
-WHERE UPPER(email) = 'USER@EXAMPLE.COM'
-
--- ✅ Rewrite to let the index work:
 WHERE created_at >= '2025-01-01' AND created_at < '2026-01-01'
-WHERE created_at >= '2025-06-01' AND created_at < '2025-06-02'
-WHERE email = 'user@example.com'  -- store normalized, don't transform at query time
 ```
+
+Verify with `EXPLAIN` rather than assuming: on 11.4+ many "won't use the index" rewrites are now no-ops. If `EXPLAIN` still shows `type=ALL` for a sargable pattern, check `@@optimizer_switch` for `sargable_casefold` and confirm the column's collation is `_ci`.
 
 ## Pagination: Cursor-Based Instead of OFFSET
 
@@ -180,6 +187,16 @@ SET optimizer_switch = 'derived_merge=on';
 
 Turn flags off one at a time to isolate which optimization is causing a bad plan, then report via JIRA if a default setting produces a worse plan than the alternative.
 
+### Optimizer Improvements in 11.4 LTS (and the 11.0–11.3 path)
+
+The 11.4 LTS line bundles a multi-version optimizer overhaul. The biggest items:
+
+- **New cost-based cost model** (11.0+) — replaces the older rule-based heuristics with a tuned model aware of SSDs and per-engine characteristics. `EXPLAIN` and join-order choices in 10.6 vs. 11.4 can differ noticeably on the same query. If you have manual `optimizer_adjust_secondary_key_costs` settings from 10.x, remove them — they're no-ops on 11.4+.
+- **Semi-join optimization for single-table `UPDATE`/`DELETE`** (11.1+, MDEV-7487) — subqueries inside `UPDATE`/`DELETE` can now use the same subquery rewrites that `SELECT` uses (materialization, semi-join, etc.). Often a large speedup, no rewrite needed.
+- **Sargable `DATE`/`YEAR` comparisons against constants** (11.1+, MDEV-8320) — see [Functions on Indexed Columns](#functions-on-indexed-columns) above.
+- **Sargable case-folding** (11.3+, MDEV-31496, `sargable_casefold` on by default) — `UCASE`/`LCASE`/`UPPER`/`LOWER` on a column with a case-insensitive collation can use the index.
+- **Descending indexes** (11.4+) — `CREATE INDEX idx ON t (a ASC, b DESC)` is supported; useful for composite `ORDER BY a, b DESC` patterns and for `MIN()`/`MAX()` on descending indexes.
+
 ### Optimizer Improvements in 11.5–11.8 LTS
 
 These are part of the current LTS baseline — useful for understanding what the optimizer can do today:
@@ -249,7 +266,7 @@ Before adding indexes or rewriting queries, check these first:
 
 1. `EXPLAIN` the slow query — confirm where the time actually is
 2. `ANALYZE TABLE` — stale statistics cause bad plans
-3. Check for functions on indexed columns in `WHERE`
+3. Check for functions on indexed columns in `WHERE` — note many cases are now sargable on 11.4+ (`YEAR()`, `DATE()`, `UPPER()` on `_ci` collations)
 4. Check for `OFFSET` in pagination queries
 5. Verify composite index column order matches query predicates (leftmost prefix)
 6. Check `EXPLAIN` Extra column for `Using filesort` or `Using temporary` — these often point to a missing or misordered index

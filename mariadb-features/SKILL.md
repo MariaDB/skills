@@ -5,7 +5,7 @@ description: "MariaDB-specific features and capabilities that go beyond standard
 
 # MariaDB Features Worth Knowing
 
-*Last updated: 2026-05-21*
+*Last updated: 2026-05-25*
 
 MariaDB has grown significantly beyond its MySQL origins. Many of its best features are unknown to developers because AI agents default to generic SQL advice. This skill covers what MariaDB can do that you might not think to ask about.
 
@@ -101,16 +101,22 @@ SELECT LASTVAL(order_seq);
 
 Sequences support gaps, multiple sequences per table, and descending sequences. Unlike `AUTO_INCREMENT`, they are not tied to a specific column or table.
 
-## Instant ALTER TABLE
+## Non-Blocking ALTER TABLE (Instant + Online by Default)
 
-Drop or modify columns without rebuilding the table — no downtime on large tables.
+MariaDB's `ALTER TABLE` works on a tiered model:
+
+- **`ALGORITHM=INSTANT`** (10.4+) — metadata-only changes (drop column, modify default, change column order, etc.) complete in microseconds without a table rebuild.
+- **`ALGORITHM=COPY, LOCK=NONE` as the default for non-instant operations** (11.2+, MDEV-16329) — even when a rebuild is needed, MariaDB now runs it non-blocking by default: concurrent DML on the table proceeds while the copy is happening, with only a brief lock at the swap. The need for external tools like `pt-online-schema-change` is largely gone for routine `ALTER`s.
+- **Optimistic two-phase replication of large `ALTER TABLE`** (11.4+, `binlog_alter_two_phase=1`, off by default) — see the `mariadb-replication-and-ha` skill.
 
 ```sql
 ALTER TABLE large_table DROP COLUMN old_column, ALGORITHM=INSTANT;
 ALTER TABLE large_table MODIFY COLUMN name VARCHAR(200), ALGORITHM=INSTANT;
+-- Non-instant change runs non-blocking by default on 11.2+:
+ALTER TABLE large_table ADD INDEX (created_at);
 ```
 
-Available since MariaDB 10.4. Use `ALGORITHM=INSTANT` explicitly; fall back to `INPLACE` or `COPY` if the operation doesn't qualify.
+Use `ALGORITHM=INSTANT` explicitly when you need to guarantee a metadata-only change; the operation will fail rather than silently fall back to a rebuild.
 
 ## INet4 and INet6 Data Types
 
@@ -167,13 +173,23 @@ Requires binary logging enabled (`log_bin`). Useful for recovering from accident
 - **`LIMIT` in subqueries** — supported; MySQL restricts this
 - **`SELECT ... OFFSET ... FETCH`** — SQL standard syntax for pagination
 - **Dynamic columns** (5.3+) — schema-less key/value storage inside a single column
-- **`SFORMAT()`** — string formatting function
+- **`SFORMAT()`** — string formatting function with positional placeholders
+- **`NATURAL_SORT_KEY()`** (11.4+, MDEV-30164) — produces a sort key that orders strings "naturally" (so `v9` sorts before `v10`); useful in `ORDER BY` for version-like or mixed-alphanumeric data
+- **JSON enhancements in 11.4 LTS** (cumulative since 10.11 LTS) — new functions for validation and structural manipulation:
+  - `JSON_SCHEMA_VALID(schema, doc)` — validate JSON against a JSON Schema Draft 2020 schema, usable inside `CHECK` constraints
+  - `JSON_EQUALS(a, b)` / `JSON_NORMALIZE(doc)` — semantic equality and canonical form for hashing or unique indexing
+  - `JSON_OVERLAPS(a, b)` — detect shared key/value or array elements between two documents
+  - `JSON_OBJECT_FILTER_KEYS(doc, keys)` / `JSON_KEY_VALUE(doc, path)` / `JSON_ARRAY_INTERSECT(a, b)` / `JSON_OBJECT_TO_ARRAY(doc)` — structural manipulation primitives that compose well with `JSON_TABLE`
+  - JSON path syntax now supports negative indices (`$.A[-1]`, `$.A[last]`) and ranges (`$.A[1 to 3]`)
 - **`UUID_v4()` and `UUID_v7()` functions** (11.7+) — generate version-4 random or version-7 time-ordered UUIDs; the v7 form is sortable and ideal for primary keys
 - **`FORMAT_BYTES()`** (11.8+) — convert a byte count to a human-readable string (e.g. `1234567` → `1.18 MiB`)
+- **`CONV()` extended to base 62** (11.4+, MDEV-30190) — `CONV(61,10,62)` returns `z`; useful for short opaque IDs
 - **Single-table `DELETE` with table aliases** (11.6+) — `DELETE t FROM mytable t WHERE ...` syntax now works without rewriting
 - **`REPAIR TABLE ... FORCE`** (11.5+) — force-repair even when the table appears clean
 - **Stored routine parameter default values** (11.8+, MDEV-10862) — `PROCEDURE p(a INT DEFAULT 0, b INT DEFAULT 0)` — call with fewer arguments
+- **Stored function `IN`/`OUT`/`INOUT` parameter qualifiers** (11.4+, MDEV-10654) — bring stored functions in line with stored procedure parameter modes
 - **`ROW` data type as stored function return value** (11.7+, MDEV-12252) — return structured rows from stored functions
+- **`CREATE PACKAGE` / `CREATE PACKAGE BODY` outside Oracle mode** (11.4+, MDEV-10075) — package routines work under the default `sql_mode` too, not only with `sql_mode=ORACLE`
 - **Update triggers with column list** (11.8+, MDEV-34551) — `CREATE TRIGGER ... BEFORE UPDATE OF col1, col2 ON t` — fire only when those columns are updated
 - **Atomic `CREATE OR REPLACE TABLE`** (13.0+) — the statement is fully atomic: either the new table replaces the old one or nothing happens, with no risk of leaving the schema in a half-replaced state. MySQL has no equivalent atomic guarantee.
 - **`UPDATE` / `DELETE` reading from a CTE** (12.3+) — `WITH ... UPDATE/DELETE` using values from a common table expression
@@ -195,8 +211,15 @@ Requires binary logging enabled (`log_bin`). Useful for recovering from accident
 - **`unix_socket` authentication** — authenticate OS users without passwords; `authentication_string` support added in 11.6+ for finer-grained mapping
 - **ED25519 plugin** — modern authentication alternative to SHA1-based plugins
 - **PARSEC plugin** (11.6+, MDEV-32618) — Password Authentication using Response Signed with Elliptic Curve; salt and per-installation key separation make stolen hashes unusable elsewhere
+- **`password_reuse_check` plugin** (11.4+, MDEV-7597) — prevent password reuse for a configurable number of days via `password_reuse_check_interval`
+- **`GRANT ... TO PUBLIC`** (11.4+, MDEV-5215) — grant privileges to all users in one statement; pair with `SHOW GRANTS FOR PUBLIC`
+- **`SHOW CREATE ROUTINE` privilege** (11.4+, MDEV-23149) — let users inspect a routine's definition without granting `SELECT` on `mysql.proc`
+- **`READ ONLY ADMIN` is now a distinct privilege** (11.4+, MDEV-29596) — split out of `SUPER` so a true read-only replica role can be granted; existing accounts that need to write to a `read_only=1` replica need this privilege granted explicitly
 - **Role-based access control** (10.0+) — roles available before MySQL added them
-- **SSL enabled by default** — no configuration required
+- **SSL enabled by default** (11.4+) — the server auto-generates a self-signed certificate and the client auto-verifies it; unencrypted client connections are refused by default. `tls_fp` lets clients verify by certificate fingerprint.
+- **`AES_ENCRYPT()` / `AES_DECRYPT()` with `iv` and `mode`** (11.4+, MDEV-30878) — `AES_ENCRYPT(str, key, iv, mode)`; supported modes include CBC, OFB, CFB128, CTR (default mode comes from the new `block_encryption_mode` variable). Brings parity with MySQL's encryption interface.
+- **`KDF()` key-derivation function** (11.4+, MDEV-31474) — derive an encryption key from a passphrase using PBKDF2-HMAC or HKDF — `AES_ENCRYPT(data, KDF('passw0rd', 'salt', 'info', 'hkdf'), iv)`. Use this rather than feeding a raw password into `AES_ENCRYPT`.
+- **`RANDOM_BYTES(n)`** (11.4+) — cryptographically secure random bytes (1–1024) from the SSL library's RNG
 - **Table-level encryption** — encrypt individual tables, not just the whole datadir
 - **HashiCorp Vault integration** — key management plugin
 - **`SET SESSION AUTHORIZATION`** (12.0+) — perform actions as another user within a session (useful for impersonation in administrative scripts and apps that need least-privilege execution)

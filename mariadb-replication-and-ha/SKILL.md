@@ -5,7 +5,7 @@ description: "Best practices for MariaDB replication and high availability — G
 
 # MariaDB Replication and High Availability
 
-*Last updated: 2026-05-21*
+*Last updated: 2026-05-25*
 
 MariaDB offers three tiers of replication depending on your consistency and availability requirements:
 
@@ -32,9 +32,10 @@ MariaDB offers three tiers of replication depending on your consistency and avai
 
 The foundation: one primary, one or more replicas. The primary writes to the binary log; replicas apply changes asynchronously.
 
-**Enable GTID-based replication** (recommended over file/position):
+**GTID-based replication is the default on 11.4 LTS+** (MDEV-31794). On a fresh slave start, a `RESET SLAVE`, or a `CHANGE MASTER TO` that omits `MASTER_USE_GTID`, the replica defaults to `slave_pos` instead of legacy file/position. If you have configs that rely on the old behavior, set `MASTER_USE_GTID=no` explicitly.
+
 ```sql
--- On replica:
+-- On replica (11.4+ — MASTER_USE_GTID is optional, slave_pos is the default):
 CHANGE MASTER TO
   MASTER_HOST='primary.host',
   MASTER_USER='repl_user',
@@ -78,6 +79,16 @@ slave_parallel_mode = optimistic   # default since 10.5.1 — tries parallel, re
 `optimistic` mode applies transactions in parallel and retries on conflict. Use `conservative` for stricter workloads where conflict retries are unacceptable.
 
 Since MariaDB 12.1, parallel replication also works when **asynchronously replicating between two Galera clusters** (MDEV-20065) — useful for cross-datacenter or DR setups where one Galera cluster is an async replica of another.
+
+### Replication Improvements in 11.4 LTS
+
+- **GTID is the default** (11.4+, MDEV-31794) — see [above](#standard-async-replication).
+- **Global limit on binary log disk space** (11.4+, MDEV-31404) — `max_binlog_total_size` (alias `binlog_space_limit`, default `0` = no limit) triggers binlog purging when the total size of all binlogs exceeds the threshold. Combine with `--slave-connections-needed-for-purge` (default `1`) so purging won't run if a configured replica is disconnected. New status variable `binlog_disk_use` reports current disk usage.
+- **GTID index for the binary log** (11.4+, MDEV-4991) — a new GTID-to-position index lets reconnecting replicas seek straight to their start position without scanning whole binlog files. Controlled by `binlog_gtid_index` (default `ON`), `binlog_gtid_index_page_size`, and `binlog_gtid_index_span_min`. Status variables `binlog_gtid_index_hit` / `binlog_gtid_index_miss` let you confirm it's being used.
+- **Optimistic two-phase `ALTER TABLE` replication** (11.4+, `binlog_alter_two_phase`) — opt-in: when enabled, a large `ALTER TABLE` is started on the replica in parallel with the primary's execution rather than after, drastically reducing replication lag during schema changes. Off by default for compatibility.
+- **`SQL_BEFORE_GTIDS` / `SQL_AFTER_GTIDS` for `START SLAVE UNTIL`** (11.4+, MDEV-27247) — finer-grained stopping for staged failover or PITR replay.
+- **Detailed replication-lag fields** (11.4+, MDEV-29639) — `SHOW REPLICA STATUS` adds `Master_last_event_time`, `Slave_last_event_time`, `Master_Slave_time_diff` for clearer lag interpretation than `Seconds_Behind_Master` alone (the 11.6 update built on this — see below).
+- **`slave_max_statement_time`** (11.4+, MDEV-29639) — caps the execution time of a single replicated query on the SQL thread, useful when you must keep lag bounded and would rather skip a slow statement than fall further behind.
 
 ### Binlog Performance Improvements in 11.7
 

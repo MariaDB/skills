@@ -5,7 +5,7 @@ description: "Compatibility guide for developers migrating from Oracle Database 
 
 # Oracle to MariaDB Migration Guide
 
-*Last updated: 2026-05-21*
+*Last updated: 2026-05-25*
 
 ## Why MariaDB for Oracle Migration
 
@@ -62,7 +62,7 @@ Without this, PL/SQL syntax, Oracle data type synonyms, and Oracle-style functio
 ## What sql_mode=ORACLE Covers
 
 ### PL/SQL Syntax (10.3+)
-- Packages: `CREATE PACKAGE`, `CREATE PACKAGE BODY`
+- Packages: `CREATE PACKAGE`, `CREATE PACKAGE BODY` — since 11.4 also work outside `sql_mode=ORACLE` (MDEV-10075), letting you use packages in mixed-mode codebases
 - Cursors: explicit, implicit, parameterized, `%ISOPEN`, `%ROWCOUNT`, `%FOUND`, `%NOTFOUND`
 - Cursors on prepared statements (12.3+)
 - Cursor variables: `TYPE ... IS REF CURSOR` (13.0+) — pass cursors as procedure parameters and return values
