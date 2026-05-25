@@ -43,6 +43,15 @@ EXPLAIN SELECT * FROM orders WHERE customer_id = 42 ORDER BY created_at DESC LIM
 ANALYZE SELECT * FROM orders WHERE customer_id = 42;
 ```
 
+**Optimizer Trace** shows the optimizer's full decision process. Since MariaDB 12.1 the trace can include full table and view definitions (`optimizer_record_context` system variable). Since 13.0 it also includes the specific statistics (histograms, index stats) used for cardinality estimates — together they're powerful for diagnosing surprising `rows` estimates:
+
+```sql
+SET optimizer_trace = 'enabled=on';
+SELECT * FROM orders WHERE customer_id = 42;
+SELECT * FROM INFORMATION_SCHEMA.OPTIMIZER_TRACE\G
+SET optimizer_trace = 'enabled=off';
+```
+
 ## Indexing Rules
 
 ### The Leftmost Prefix Rule
@@ -170,6 +179,58 @@ SET optimizer_switch = 'derived_merge=on';
 | `mrr` | off | Multi-Range Read — enable for large range scans on spinning disks |
 
 Turn flags off one at a time to isolate which optimization is causing a bad plan, then report via JIRA if a default setting produces a worse plan than the alternative.
+
+### Optimizer Improvements in MariaDB 12.x
+
+Several long-standing limitations were lifted in the 12.x rolling releases — useful to know when you see surprisingly bad plans on the 11.8 LTS baseline:
+
+- **Rowid filtering on reverse-ordered scans** (12.0+) — previously `ORDER BY ... DESC` queries couldn't benefit from rowid filtering; now they can
+- **Index Condition Pushdown on reverse-ordered scans** (12.0+) — same fix for ICP
+- **Loose Index Scan ("Use index for group-by") works with `DESC` key parts** (12.0+) — previously required `ASC` indexes
+- **GROUP BY / ORDER BY can use indexes on virtual columns** (12.1+)
+- **Reorderable LEFT JOIN optimization** (12.3+) — the optimizer can now reorder more `LEFT JOIN` combinations
+- **Distinct GROUP BY column inference** (12.2+) — derived tables with `GROUP BY` are recognized as having distinct group keys, enabling more optimizations downstream
+
+If you target the 11.8 LTS baseline and see a plan that looks needlessly slow on a reverse-ordered or virtual-column query, it may be one of these — verify by running the same query on a 12.x version.
+
+## Optimizer Hints
+
+MariaDB 12.0 introduced a comprehensive MySQL-8-style optimizer hints framework (MDEV-35504), with additional hints added through 12.1 and 12.2. Hints go in a `/*+ ... */` comment right after `SELECT` and override the optimizer for one query without changing session settings:
+
+```sql
+SELECT /*+ JOIN_ORDER(o, c) */ *
+FROM orders o JOIN customers c ON c.id = o.customer_id;
+```
+
+**Available hints:**
+
+| Hint | Since | Purpose |
+|---|---|---|
+| `QB_NAME(name)` | 12.0 | Name a query block so other hints can target it from outside |
+| `JOIN_FIXED_ORDER` / `JOIN_ORDER(t1, t2, ...)` | 12.0 | Force a join order (`JOIN_FIXED_ORDER` is similar to `STRAIGHT_JOIN`) |
+| `JOIN_PREFIX(t1, ...)` / `JOIN_SUFFIX(t1, ...)` | 12.0 | Force specific tables to be first or last in the join order |
+| `MAX_EXECUTION_TIME(ms)` | 12.0 | Abort the query if it runs longer than the timeout |
+| `[NO_]MRR` / `[NO_]BKA` / `[NO_]BNL` | 12.0 | Toggle Multi-Range Read, Batched Key Access, Block Nested Loop |
+| `[NO_]ICP` | 12.0 | Toggle Index Condition Pushdown |
+| `[NO_]RANGE_OPTIMIZATION` | 12.0 | Toggle range optimizer |
+| `SEMIJOIN(strategy, ...)` / `SUBQUERY(strategy)` | 12.0 | Pick subquery rewrite strategy |
+| `[NO_]INDEX(t idx, ...)` / `[NO_]JOIN_INDEX` / `[NO_]GROUP_INDEX` / `[NO_]ORDER_INDEX` | 12.1 | Force / forbid specific index usage by purpose |
+| `[NO_]SPLIT_MATERIALIZED` / `[NO_]DERIVED_CONDITION_PUSHDOWN` / `[NO_]MERGE` | 12.1 | Control subquery / derived-table optimizations |
+| `[NO_]ROWID_FILTER` / `[NO_]INDEX_MERGE` | 12.2 | Toggle rowid filtering and index merge |
+
+**`QB_NAME()` example** — name a subquery so an outer hint can target it:
+
+```sql
+SELECT /*+ NO_MERGE(@sub) */ *
+FROM (
+    SELECT /*+ QB_NAME(sub) */ customer_id, COUNT(*) AS n
+    FROM orders
+    GROUP BY customer_id
+) t
+WHERE n > 10;
+```
+
+Hints are more targeted than `SET optimizer_switch` because they apply only to the query they're in, not the whole session.
 
 ## Quick Wins Checklist
 

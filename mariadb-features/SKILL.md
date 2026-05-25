@@ -25,6 +25,21 @@ For MariaDB Vector (built-in since 11.7 — no plugins), see the `mariadb-vector
 | Analytics queries on OLTP tables | ColumnStore engine — columnar storage for analytical workloads |
 | Links or references to `mariadb.com/kb/en/` | The Knowledge Base no longer exists — all documentation is now at [mariadb.com/docs](https://mariadb.com/docs) |
 
+## Behavior Change: innodb_snapshot_isolation (12.3+)
+
+From MariaDB 12.3, `innodb_snapshot_isolation` defaults to **ON** (previously OFF). This tightens REPEATABLE READ behavior to match true snapshot isolation — transactions see a consistent snapshot from their start and writes detect conflicts more strictly.
+
+**What can change for existing code:**
+- Read-modify-write patterns that previously worked silently may now hit conflicts and error out — fail-fast is the intended behavior
+- Long-running `REPEATABLE READ` transactions are more likely to see write conflicts at commit time
+
+If existing code depends on the older permissive behavior, opt back in explicitly:
+```sql
+SET GLOBAL innodb_snapshot_isolation = OFF;  -- restore pre-12.3 behavior
+```
+
+The new default is the correct semantics — review code that relies on the looser behavior rather than disabling it long-term.
+
 ## System-Versioned Tables
 
 Available since MariaDB 10.3. Track the full history of every row automatically, without triggers or audit tables.
@@ -143,6 +158,13 @@ Requires binary logging enabled (`log_bin`). Useful for recovering from accident
 - **`SELECT ... OFFSET ... FETCH`** — SQL standard syntax for pagination
 - **Dynamic columns** (5.3+) — schema-less key/value storage inside a single column
 - **`SFORMAT()`** — string formatting function
+- **Atomic `CREATE OR REPLACE TABLE`** (13.0+) — the statement is fully atomic: either the new table replaces the old one or nothing happens, with no risk of leaving the schema in a half-replaced state. MySQL has no equivalent atomic guarantee.
+- **`UPDATE` / `DELETE` reading from a CTE** (12.3+) — `WITH ... UPDATE/DELETE` using values from a common table expression
+- **`IS JSON` predicate** (12.3+) — SQL-standard test for whether a value is valid JSON: `WHERE col IS JSON`
+- **JSON depth limit removed** (12.2+) — the 32-level nesting limit on JSON functions is gone; deeply nested JSON now works without rewrites
+- **Basic XML data type** (12.3+) — first-class `XML` type for storing and validating XML documents
+- **Triggers fired on multiple events** (12.0+) — one trigger body for `INSERT OR UPDATE OR DELETE`, instead of three separate triggers
+- **Foreign key names per table** (12.1+) — FK names need to be unique only per table, not per database (MySQL-compatible behavior)
 - **Stored procedures and functions** — MariaDB uses SQL/PSM syntax (`DECLARE`, `HANDLER`, `CURSOR`, `BEGIN...END`); AI agents often generate incorrect syntax — see [Stored Procedures — MariaDB Docs](https://mariadb.com/docs/server/server-usage/stored-routines/stored-procedures)
 
 ### Storage Engines
@@ -159,6 +181,8 @@ Requires binary logging enabled (`log_bin`). Useful for recovering from accident
 - **SSL enabled by default** — no configuration required
 - **Table-level encryption** — encrypt individual tables, not just the whole datadir
 - **HashiCorp Vault integration** — key management plugin
+- **`SET SESSION AUTHORIZATION`** (12.0+) — perform actions as another user within a session (useful for impersonation in administrative scripts and apps that need least-privilege execution)
+- **Passphrase-protected TLS keys** (12.0+) — `ssl_passphrase` system variable lets the server load encrypted private keys
 
 ### Replication & HA
 - **Galera Cluster** — built-in synchronous multi-master clustering
@@ -174,6 +198,11 @@ Requires binary logging enabled (`log_bin`). Useful for recovering from accident
 - **Progress reporting** for `ALTER TABLE` and `CHECK TABLE`
 - **`mariadb-backup`** — hot backup with backup locks (no `FLUSH TABLES WITH READ LOCK`)
 - **Non-blocking client API** — async queries without threads
+- **Deprecation visibility** (13.0+) — `INFORMATION_SCHEMA.SYSTEM_VARIABLES` includes a deprecated flag, so you can detect uses of variables that will be removed in future versions before they break:
+  ```sql
+  SELECT variable_name, default_value FROM INFORMATION_SCHEMA.SYSTEM_VARIABLES WHERE is_deprecated = 'YES';
+  ```
+- **Engine-specific create options visible in `INFORMATION_SCHEMA`** (13.0+) — `STATISTICS` and `COLUMNS` now expose engine-specific options, useful when inspecting how indexes or columns were configured
 
 ## Sources
 

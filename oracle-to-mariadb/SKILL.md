@@ -37,7 +37,7 @@ Without this, PL/SQL syntax, Oracle data type synonyms, and Oracle-style functio
 | Oracle `DATE` mapped to MariaDB `DATE` | Oracle `DATE` stores date AND time — map to `DATETIME`, not `DATE` |
 | Assuming 100% PL/SQL compatibility | ~80% works without changes; `SYNONYM`, `INSERT ALL`, `(+)` joins, `CONNECT BY` require rewrites |
 | `SYNONYM` usage in schema or code | No equivalent in MariaDB — replace with views or direct object references |
-| `(+)` outer join notation | Supported since MariaDB 12.1 in Oracle mode — on older versions rewrite as `LEFT JOIN` / `RIGHT JOIN` |
+| `(+)` outer join notation | Supported in Oracle mode since MariaDB 12.1 (MDEV-13817) — on older versions rewrite as `LEFT JOIN` / `RIGHT JOIN` |
 | `START WITH ... CONNECT BY` | Not supported — rewrite as recursive CTE using `WITH RECURSIVE` |
 | `TIMESTAMP WITH TIME ZONE` | Loses timezone on migration — becomes `DATETIME`; handle timezone in application |
 
@@ -64,7 +64,12 @@ Without this, PL/SQL syntax, Oracle data type synonyms, and Oracle-style functio
 ### PL/SQL Syntax (10.3+)
 - Packages: `CREATE PACKAGE`, `CREATE PACKAGE BODY`
 - Cursors: explicit, implicit, parameterized, `%ISOPEN`, `%ROWCOUNT`, `%FOUND`, `%NOTFOUND`
+- Cursors on prepared statements (12.3+)
+- Cursor variables: `TYPE ... IS REF CURSOR` (13.0+) — pass cursors as procedure parameters and return values
+- Pre-defined weak `SYS_REFCURSOR` (12.0+) — built-in cursor type, no `TYPE` declaration needed; `max_open_cursors` system variable caps concurrent open cursors
 - Variable types: `:=` assignment, `%TYPE`, `%ROWTYPE`
+- `RECORD` types in routine parameters and function `RETURN` clauses (13.0+)
+- Associative arrays: `DECLARE TYPE ... TABLE OF ... INDEX BY` (12.1+)
 - Control flow: `FOR i IN 1..10 LOOP`, `GOTO`, `EXIT WHEN`, `ELSIF`, `CONTINUE`
 - Exception handling: `EXCEPTION WHEN TOO_MANY_ROWS / NO_DATA_FOUND / DUP_VAL_ON_INDEX`
 - Anonymous blocks: `BEGIN ... END`
@@ -77,10 +82,12 @@ Without this, PL/SQL syntax, Oracle data type synonyms, and Oracle-style functio
 | `DECODE()` | 10.3 |
 | `CHR()`, `SUBSTR()` with position 0 | 10.3 |
 | `ADD_MONTHS()` | 10.6 |
-| `TO_CHAR()` | 10.6 |
+| `TO_CHAR()` | 10.6 (FM padding-suppression format added in 12.0) |
 | `SYS_GUID()` | 10.6 |
 | `ROWNUM` | 10.6 |
 | `TO_NUMBER()` | 12.2.1 |
+| `TO_DATE()` | 12.3 (native; on older versions use `STR_TO_DATE()`) |
+| `TRUNC()` | 12.2 |
 
 ### NULL Handling
 Oracle treats empty strings as `NULL`. `sql_mode=ORACLE` does **not** activate this automatically — `EMPTY_STRING_IS_NULL` must be added separately:
@@ -124,7 +131,6 @@ These Oracle features have no direct equivalent and require code changes:
   ```
 - **`TIMESTAMP WITH TIME ZONE`** — store timezone offset in a separate column or handle in application
 - **Object types and inheritance** — no equivalent; restructure as normalized tables
-- **`TO_DATE()`** — use `STR_TO_DATE()` instead
 
 ## Migration Tools
 
@@ -139,6 +145,7 @@ These Oracle features have no direct equivalent and require code changes:
 - **`SYSDATE`**: In MariaDB Oracle mode, `SYSDATE` works but returns `DATETIME`. Verify date-only comparisons.
 - **`DUAL`**: Works in MariaDB but not identically — avoid schema-qualified references like `schema.DUAL`.
 - **Sequences**: `CREATE SEQUENCE` works in MariaDB 10.3+ with Oracle-compatible syntax (`MINVALUE`, `MAXVALUE`, `INCREMENT BY`).
+- **`DROP USER` with active sessions** (12.1+): Oracle-compatible behavior — in Oracle mode, `DROP USER` fails if the user has active sessions; in other modes, it issues a warning.
 - **~20% rewrite**: No tool achieves 100% Oracle-to-MariaDB conversion. Plan for manual review of complex PL/SQL, object types, and unsupported syntax.
 
 ## Sources

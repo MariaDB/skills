@@ -20,7 +20,7 @@ The two databases share a common origin but have evolved independently. MariaDB 
 | What you might see | What's correct |
 |---|---|
 | "MariaDB is a drop-in replacement for MySQL" | True for MySQL 5.5/5.6. Not true for MySQL 8.0+ — authentication, JSON, GTID, and several functions differ |
-| Code using `caching_sha2_password` | Not supported by default — a migration-only plugin exists since MariaDB 11.4 but is not recommended for production; use `mysql_native_password` or `ed25519` |
+| Code using `caching_sha2_password` | Available in MariaDB: a migration-only plugin since 11.4, and a full `caching_sha2_password` authentication plugin for MySQL compatibility since 12.1 (MDEV-9804). Not the default — on older MariaDB or stock installs use `mysql_native_password` or `ed25519` |
 | `JSON_TABLE()` in queries | Available in MariaDB since 10.6 — not available before 10.6 |
 | JSON `->` and `->>` shorthand operators | Not supported in MariaDB — use `JSON_EXTRACT(col, '$.key')` and `JSON_UNQUOTE(JSON_EXTRACT(...))` instead |
 | `utf8mb4_0900_ai_ci` collation in schema or dump | Supported since MariaDB 11.4.5 (as alias for `utf8mb4_uca1400_nopad_ai_ci`). On older versions replace with `utf8mb4_unicode_ci` before importing |
@@ -32,14 +32,19 @@ The two databases share a common origin but have evolved independently. MariaDB 
 
 ## Authentication
 
-MySQL 8.0 changed its default authentication plugin to `caching_sha2_password`. MariaDB does not support this plugin by default — a migration-only plugin was added in MariaDB 11.4, but it is not installed by default and not recommended for production. On most MariaDB setups, connections configured for `caching_sha2_password` will fail.
+MySQL 8.0 changed its default authentication plugin to `caching_sha2_password`. MariaDB's compatibility story has improved over time:
 
-**Fix:** Convert accounts to `mysql_native_password`:
+- **MariaDB 11.4+**: a migration-only `caching_sha2_password` plugin exists but is not installed by default and not recommended for production
+- **MariaDB 12.1+** (MDEV-9804): a full `caching_sha2_password` authentication plugin for MySQL compatibility — still not the default, but a proper production option
+
+On stock MariaDB installs, connections configured for `caching_sha2_password` will still fail unless the plugin is enabled. Default authentication remains `mysql_native_password`.
+
+**Fix on older MariaDB or stock setups:** convert accounts to `mysql_native_password`:
 ```sql
 ALTER USER 'username'@'host' IDENTIFIED WITH mysql_native_password BY 'password';
 ```
 
-MariaDB's default authentication is `mysql_native_password`. The `ed25519` plugin is also available as a more secure alternative.
+The `ed25519` plugin is also available as a more secure native alternative.
 
 ## JSON Differences
 
@@ -48,11 +53,13 @@ MariaDB and MySQL handle JSON differently:
 | Aspect | MySQL | MariaDB |
 |---|---|---|
 | Storage | Binary format with path indexing | `LONGTEXT` alias with validity check |
-| `JSON_TABLE()` | Supported | Not available |
+| `JSON_TABLE()` | Supported | Supported from MariaDB 10.6 |
+| `IS JSON` predicate | Not available | Available from MariaDB 12.3 |
 | JSON comparison | Semantic (compares values) | String comparison |
 | `JSON_QUERY()` | Not available | MariaDB alternative to `JSON_VALUE` |
+| JSON nesting depth limit | None | 32 in older MariaDB; removed in 12.2+ |
 
-MariaDB's JSON is fully standards-compliant and all standard JSON functions work, but MySQL-specific optimizations and `JSON_TABLE()` do not transfer.
+MariaDB's JSON is fully standards-compliant and all standard JSON functions work, but MySQL-specific optimizations and the `->`/`->>` shorthand operators do not transfer.
 
 ## Features MariaDB Has That MySQL Doesn't
 
@@ -78,6 +85,7 @@ These exist in MariaDB but not MySQL — LLMs won't suggest them because they as
   SELECT * FROM prices FOR SYSTEM_TIME AS OF '2025-01-01';
   ```
 - **`LIMIT` in subqueries** — MariaDB supports `LIMIT` inside subqueries; MySQL restricts this
+- **Atomic `CREATE OR REPLACE TABLE`** (13.0+) — the statement is fully atomic in MariaDB; MySQL has no atomic equivalent
 - **Galera Cluster** — built-in multi-master clustering, no plugin required
 - **Stored procedure syntax differences** — both support stored procedures, but MariaDB's SQL/PSM syntax differs from MySQL in `HANDLER`, `CURSOR`, and `CONDITION` declarations; AI agents frequently generate incorrect MariaDB stored procedure code — see [Stored Procedures — MariaDB Docs](https://mariadb.com/docs/server/server-usage/stored-routines/stored-procedures)
 - **INet4 / INet6 data types** (10.5+) — native IP address storage and comparison
@@ -89,7 +97,8 @@ These exist in MySQL 8.0 but not in MariaDB — code using them needs adaptation
 - **`JSON_TABLE()`** — available since MariaDB 10.6; on older versions rewrite using MariaDB JSON functions or application-level parsing
 - **`sys` schema** — available since MariaDB 10.6; not available in older versions
 - **`UUID` data type** — available as a native data type since MariaDB 10.7; on older versions use `CHAR(36)` or `BINARY(16)`
-- **`caching_sha2_password`** — use `mysql_native_password` or `ed25519`
+- **MySQL 8 GIS functions** (`ST_Validate`, `MBRCoveredBy`, `ST_Simplify`, `ST_GeoHash`, `ST_LatFromGeoHash`, `ST_LongFromGeoHash`, `ST_PointFromGeoHash`, `ST_IsValid`, `ST_Collect`) — added in MariaDB 12.0 for MySQL compatibility
+- **`caching_sha2_password` as default plugin** — available as an opt-in plugin from MariaDB 12.1; on older or stock setups, use `mysql_native_password` or `ed25519`
 - **`ALTER TABLE ... RENAME INDEX`** — use `DROP INDEX` + `ADD INDEX` instead (older MariaDB versions)
 - **JSON `->` and `->>` operators** — use `JSON_EXTRACT(col, '$.key')` and `JSON_UNQUOTE(JSON_EXTRACT(...))` instead
 - **`utf8mb4_0900_ai_ci` collation** — supported since MariaDB 11.4.5 (alias for `utf8mb4_uca1400_nopad_ai_ci`); on older versions replace with `utf8mb4_unicode_ci` before importing

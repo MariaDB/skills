@@ -217,6 +217,7 @@ The embedding model determines vector quality. Some practical guidance:
 ## Performance Notes
 
 - MariaDB Vector uses **SIMD hardware optimizations** (AVX2, AVX512 on Intel; NEON on ARM; VSX on IBM Power10). No configuration needed — it detects and uses the best available instruction set.
+- **Faster vector distance via extrapolation** (12.1+, MDEV-36205) — vector search is 30–50% faster on the same data and recall, with no schema or index changes required. The optimization applies automatically to vectors that can be gradually truncated to trade recall for speed (e.g. Matryoshka-style embeddings from OpenAI).
 - **Multi-connection scalability** is a strength. Benchmark results show MariaDB Vector scales well with concurrent queries, outperforming some dedicated vector databases in multi-threaded scenarios.
 - For large datasets (millions of vectors), tune the **M parameter** upward and ensure sufficient memory for the index.
 - **Bulk inserts**: load data first, then create the vector index. This is significantly faster than inserting into an already-indexed table.

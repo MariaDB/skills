@@ -46,6 +46,8 @@ START SLAVE;
 
 Use `current_pos` instead of `slave_pos` when promoting a replica to primary — it includes locally-written GTIDs.
 
+Since MariaDB 13.0, `CHANGE MASTER` also resets `Master_Server_Id` in `SHOW SLAVES STATUS`. On older versions this field could carry stale values across primary changes — check it explicitly when reconfiguring replication on pre-13.0 servers.
+
 ### MariaDB GTID Format
 
 MariaDB GTIDs have three components: `domain_id-server_id-sequence` (e.g., `0-1-247`).
@@ -61,6 +63,8 @@ SET GLOBAL gtid_domain_id = 1;
 SET GLOBAL gtid_domain_id = 2;
 ```
 
+Since MariaDB 13.0, `default_master_connection` can be set at the global level — convenient for replicas that connect to one logical "primary" source across multiple servers without specifying the connection name in every replication command.
+
 ### Parallel Replication
 
 By default, replicas apply events serially. Parallel replication (up to 10× faster on write-heavy workloads) uses a pool of worker threads:
@@ -72,6 +76,8 @@ slave_parallel_mode = optimistic   # default since 10.5.1 — tries parallel, re
 ```
 
 `optimistic` mode applies transactions in parallel and retries on conflict. Use `conservative` for stricter workloads where conflict retries are unacceptable.
+
+Since MariaDB 12.1, parallel replication also works when **asynchronously replicating between two Galera clusters** (MDEV-20065) — useful for cross-datacenter or DR setups where one Galera cluster is an async replica of another.
 
 ### Monitoring Replication Lag
 
@@ -105,6 +111,8 @@ Use when: you need stronger data durability than async but your workload tolerat
 
 Multi-primary synchronous replication — all nodes accept reads and writes, changes are certified across the cluster before committing. No single point of failure. Built into MariaDB.
 
+> **Packaging change (12.3+):** The Galera library is no longer included as a server-package dependency or in the MariaDB repositories by default (MDEV-38744). On 12.3+ you must install `galera-4` (or your distro's equivalent) separately when setting up a Galera node. The MariaDB server still understands Galera natively — only the library distribution changed.
+
 ### Developer Constraints
 
 These will break in Galera if you're not aware of them:
@@ -133,9 +141,11 @@ COMMIT;
 
 **InnoDB only** — Galera replicates only InnoDB tables. MyISAM has experimental support via `wsrep_replicate_myisam` but is not recommended for production.
 
-**Transaction size limits** — default caps: 128K rows (`wsrep_max_ws_rows`) and 2GB (`wsrep_max_ws_size`). Extremely large transactions degrade cluster performance significantly and may require config tuning.
+**Transaction size limits** — default caps: 128K rows (`wsrep_max_ws_rows`) and 2GB (`wsrep_max_ws_size`). Extremely large transactions degrade cluster performance significantly and may require config tuning. Note: in MariaDB 13.0+, the default `binlog_row_event_max_size` is 64 KB (up from older 8 KB) — relevant when sizing replication events for write-heavy workloads.
 
 **Binary log must be ROW format** — do not change `binlog_format` at runtime in a Galera cluster.
+
+**Write-set retry on conflict** (12.1+) — `wsrep_applier_retry_count` controls how many times an applier retries a write set before erroring out. Tune this if your workload sees transient certification conflicts on busy clusters.
 
 **Query cache:** The query cache was removed in later MariaDB versions and was not required in Galera since MariaDB 10.1.2. No action needed on modern installations.
 
@@ -178,6 +188,8 @@ CHANGE MASTER TO MASTER_DELAY = 3600;  -- 1 hour lag
 ```
 
 This gives a recovery window for accidental changes, but it is still not a substitute for backups.
+
+**Point-in-time recovery (13.0+)** — the new `innodb_log_archive` variable instructs InnoDB to preserve the write-ahead log as a continuous sequence of files instead of overwriting a ring buffer. Combined with a base backup, this enables PITR and incremental backups without needing the binary log alone. Use this on systems that need to roll forward to a precise transaction.
 
 ## Failover Tools
 
