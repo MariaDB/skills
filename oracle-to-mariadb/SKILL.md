@@ -68,8 +68,10 @@ Without this, PL/SQL syntax, Oracle data type synonyms, and Oracle-style functio
 - Cursor variables: `TYPE ... IS REF CURSOR` (13.0+) — pass cursors as procedure parameters and return values
 - Pre-defined weak `SYS_REFCURSOR` (12.0+) — built-in cursor type, no `TYPE` declaration needed; `max_open_cursors` system variable caps concurrent open cursors
 - Variable types: `:=` assignment, `%TYPE`, `%ROWTYPE`
+- `ROW` data type as stored function return value (11.7+) — function returns a structured row, similar to Oracle row types
 - `RECORD` types in routine parameters and function `RETURN` clauses (13.0+)
 - Associative arrays: `DECLARE TYPE ... TABLE OF ... INDEX BY` (12.1+)
+- Stored routine parameters can have default values (11.8+) — call procedures with fewer arguments, like Oracle's `DEFAULT` clause
 - Control flow: `FOR i IN 1..10 LOOP`, `GOTO`, `EXIT WHEN`, `ELSIF`, `CONTINUE`
 - Exception handling: `EXCEPTION WHEN TOO_MANY_ROWS / NO_DATA_FOUND / DUP_VAL_ON_INDEX`
 - Anonymous blocks: `BEGIN ... END`

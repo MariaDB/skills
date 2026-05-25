@@ -25,9 +25,19 @@ For MariaDB Vector (built-in since 11.7 — no plugins), see the `mariadb-vector
 | Analytics queries on OLTP tables | ColumnStore engine — columnar storage for analytical workloads |
 | Links or references to `mariadb.com/kb/en/` | The Knowledge Base no longer exists — all documentation is now at [mariadb.com/docs](https://mariadb.com/docs) |
 
-## Behavior Change: innodb_snapshot_isolation (12.3+)
+## Defaults Changed in 11.5–11.8 LTS
 
-From MariaDB 12.3, `innodb_snapshot_isolation` defaults to **ON** (previously OFF). This tightens REPEATABLE READ behavior to match true snapshot isolation — transactions see a consistent snapshot from their start and writes detect conflicts more strictly.
+The current LTS (11.8) flipped several long-standing defaults. New installations behave differently from older ones — relevant when migrating or comparing behavior:
+
+- **Default character set: `latin1` → `utf8mb4`** (11.6+, MDEV-19123) — new tables use `utf8mb4` unless overridden. Replication to MariaDB 10.6 or older replicas needs care (older replicas may not understand all `utf8mb4` collations).
+- **Default Unicode collation: `uca1400_ai_ci`** (11.5+, MDEV-25829) — modern Unicode collation with proper SMP (supplementary multilingual plane) support including emoji. Replaces the older `utf8mb4_general_ci` default.
+- **`alter_algorithm` deprecated and ignored** (11.5+, MDEV-33655) — specify `ALGORITHM=INSTANT|INPLACE|COPY` on the statement itself instead.
+- **TIMESTAMP range extended** (11.5+ 64-bit, MDEV-32188) — upper bound raised from `2038-01-19 03:14:07 UTC` to `2106-02-07 06:28:15 UTC`. Storage format unchanged; old servers can still read values within the old range.
+- **`innodb_snapshot_isolation` default ON** — see next section.
+
+## Behavior Change: innodb_snapshot_isolation (11.8+)
+
+From MariaDB 11.8 LTS, `innodb_snapshot_isolation` defaults to **ON** (previously OFF, MDEV-35124). This tightens REPEATABLE READ behavior to match true snapshot isolation — transactions see a consistent snapshot from their start and writes detect conflicts more strictly.
 
 **What can change for existing code:**
 - Read-modify-write patterns that previously worked silently may now hit conflicts and error out — fail-fast is the intended behavior
@@ -35,7 +45,7 @@ From MariaDB 12.3, `innodb_snapshot_isolation` defaults to **ON** (previously OF
 
 If existing code depends on the older permissive behavior, opt back in explicitly:
 ```sql
-SET GLOBAL innodb_snapshot_isolation = OFF;  -- restore pre-12.3 behavior
+SET GLOBAL innodb_snapshot_isolation = OFF;  -- restore pre-11.8 behavior
 ```
 
 The new default is the correct semantics — review code that relies on the looser behavior rather than disabling it long-term.
@@ -158,6 +168,13 @@ Requires binary logging enabled (`log_bin`). Useful for recovering from accident
 - **`SELECT ... OFFSET ... FETCH`** — SQL standard syntax for pagination
 - **Dynamic columns** (5.3+) — schema-less key/value storage inside a single column
 - **`SFORMAT()`** — string formatting function
+- **`UUID_v4()` and `UUID_v7()` functions** (11.7+) — generate version-4 random or version-7 time-ordered UUIDs; the v7 form is sortable and ideal for primary keys
+- **`FORMAT_BYTES()`** (11.8+) — convert a byte count to a human-readable string (e.g. `1234567` → `1.18 MiB`)
+- **Single-table `DELETE` with table aliases** (11.6+) — `DELETE t FROM mytable t WHERE ...` syntax now works without rewriting
+- **`REPAIR TABLE ... FORCE`** (11.5+) — force-repair even when the table appears clean
+- **Stored routine parameter default values** (11.8+, MDEV-10862) — `PROCEDURE p(a INT DEFAULT 0, b INT DEFAULT 0)` — call with fewer arguments
+- **`ROW` data type as stored function return value** (11.7+, MDEV-12252) — return structured rows from stored functions
+- **Update triggers with column list** (11.8+, MDEV-34551) — `CREATE TRIGGER ... BEFORE UPDATE OF col1, col2 ON t` — fire only when those columns are updated
 - **Atomic `CREATE OR REPLACE TABLE`** (13.0+) — the statement is fully atomic: either the new table replaces the old one or nothing happens, with no risk of leaving the schema in a half-replaced state. MySQL has no equivalent atomic guarantee.
 - **`UPDATE` / `DELETE` reading from a CTE** (12.3+) — `WITH ... UPDATE/DELETE` using values from a common table expression
 - **`IS JSON` predicate** (12.3+) — SQL-standard test for whether a value is valid JSON: `WHERE col IS JSON`
@@ -175,8 +192,9 @@ Requires binary logging enabled (`log_bin`). Useful for recovering from accident
 - **Spider** — sharding across multiple MariaDB instances
 
 ### Security & Auth
-- **`unix_socket` authentication** — authenticate OS users without passwords
+- **`unix_socket` authentication** — authenticate OS users without passwords; `authentication_string` support added in 11.6+ for finer-grained mapping
 - **ED25519 plugin** — modern authentication alternative to SHA1-based plugins
+- **PARSEC plugin** (11.6+, MDEV-32618) — Password Authentication using Response Signed with Elliptic Curve; salt and per-installation key separation make stolen hashes unusable elsewhere
 - **Role-based access control** (10.0+) — roles available before MySQL added them
 - **SSL enabled by default** — no configuration required
 - **Table-level encryption** — encrypt individual tables, not just the whole datadir

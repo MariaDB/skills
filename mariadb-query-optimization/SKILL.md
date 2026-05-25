@@ -180,9 +180,20 @@ SET optimizer_switch = 'derived_merge=on';
 
 Turn flags off one at a time to isolate which optimization is causing a bad plan, then report via JIRA if a default setting produces a worse plan than the alternative.
 
+### Optimizer Improvements in 11.5–11.8 LTS
+
+These are part of the current LTS baseline — useful for understanding what the optimizer can do today:
+
+- **Index Condition Pushdown on partitioned tables** (11.5+, MDEV-12404) — previously partitioned tables couldn't use ICP; now they do, often a large speedup on partitioned schemas
+- **`ANALYZE` shows selectivity of pushed index condition** (11.5+, MDEV-18478) — useful when diagnosing whether ICP is helping
+- **Charset Narrowing Optimization on by default** (11.8+, MDEV-34380) — eliminates unnecessary character set conversions in WHERE clauses
+- **`SUBSTR(col, 1, n) = const_str` optimization** (11.8+, MDEV-34911) — the optimizer can now use a column index even when the condition is a leading-prefix `SUBSTR`
+- **Virtual column support in the optimizer** (11.8+, MDEV-35616) — see [Virtual Column Support in the Optimizer](https://mariadb.com/docs/server/ha-and-performance/optimization-and-tuning/query-optimizations/virtual-column-support-in-the-optimizer); previously, virtual columns were largely invisible to the optimizer
+- **Cost-based subquery strategy for single-table `UPDATE`/`DELETE`** (11.8+, MDEV-25008) — the optimizer now picks between subquery strategies by cost
+
 ### Optimizer Improvements in MariaDB 12.x
 
-Several long-standing limitations were lifted in the 12.x rolling releases — useful to know when you see surprisingly bad plans on the 11.8 LTS baseline:
+Several further limitations were lifted in the 12.x rolling releases:
 
 - **Rowid filtering on reverse-ordered scans** (12.0+) — previously `ORDER BY ... DESC` queries couldn't benefit from rowid filtering; now they can
 - **Index Condition Pushdown on reverse-ordered scans** (12.0+) — same fix for ICP

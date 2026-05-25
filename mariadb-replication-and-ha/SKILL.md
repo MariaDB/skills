@@ -79,6 +79,12 @@ slave_parallel_mode = optimistic   # default since 10.5.1 — tries parallel, re
 
 Since MariaDB 12.1, parallel replication also works when **asynchronously replicating between two Galera clusters** (MDEV-20065) — useful for cross-datacenter or DR setups where one Galera cluster is an async replica of another.
 
+### Binlog Performance Improvements in 11.7
+
+- **Large-transaction commit no longer freezes other transactions** (11.7+, MDEV-32014) — previously, committing a very large transaction while `log_bin` was on would stall all other transactions until the binlog write completed. This bottleneck is gone.
+- **Async rollback of prepared transactions during binlog crash recovery** (11.7+, MDEV-33853) — faster startup after a crash with many prepared transactions.
+- **`slave_abort_blocking_timeout`** (11.7+, MDEV-34857) — kill long-running queries on a replica when they block replication progress past a threshold. Useful on read replicas that occasionally run long analytical queries.
+
 ### Monitoring Replication Lag
 
 ```sql
@@ -90,6 +96,8 @@ SHOW SLAVE STATUS\G
 ```
 
 Alert when `Seconds_Behind_Master > 5` for latency-sensitive applications. A value of `NULL` means replication is not running. Note: `Seconds_Behind_Master` can be misleading on idle primaries — use heartbeat tools (e.g., `pt-heartbeat`) for accurate measurement.
+
+Since MariaDB 11.6 (MDEV-33856), the definition of `Seconds_Behind_Master` was refined and three new columns were added to `SHOW ALL REPLICAS STATUS` plus a new Information Schema `SLAVE_STATUS` table, providing more nuanced lag visibility (e.g., separate measurements for IO vs SQL thread lag).
 
 ## Semi-Synchronous Replication
 
@@ -146,6 +154,8 @@ COMMIT;
 **Binary log must be ROW format** — do not change `binlog_format` at runtime in a Galera cluster.
 
 **Write-set retry on conflict** (12.1+) — `wsrep_applier_retry_count` controls how many times an applier retries a write set before erroring out. Tune this if your workload sees transient certification conflicts on busy clusters.
+
+**Automatic SST user account management** (11.6+, MDEV-31809) — Galera now manages the dedicated SST (State Snapshot Transfer) user account automatically; you no longer have to create and grant it manually on every node.
 
 **Query cache:** The query cache was removed in later MariaDB versions and was not required in Galera since MariaDB 10.1.2. No action needed on modern installations.
 

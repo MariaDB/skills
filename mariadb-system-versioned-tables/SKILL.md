@@ -11,7 +11,7 @@ System-versioned tables automatically record the full history of every row chang
 
 This feature is unique to MariaDB among MySQL-compatible databases. MySQL has no equivalent.
 
-> **Available since:** MariaDB 10.3. Transaction-precise history (InnoDB only): 10.3. Auto-partition creation: 10.9. `--dump-history` for backups: 10.11.
+> **Available since:** MariaDB 10.3. Transaction-precise history (InnoDB only): 10.3. Auto-partition creation: 10.9. `--dump-history` for backups: 10.11. Implicit-to-explicit `row_start`/`row_end` conversion: 11.7. Extended TIMESTAMP range (to 2106-02-07 UTC) for `ROW_END`: 11.5 on 64-bit platforms.
 
 ## What LLMs Often Miss
 
@@ -164,13 +164,15 @@ SET system_versioning_alter_history = ERROR; -- restore default
 
 `KEEP` allows the alter but historical rows for the new column will have `NULL` values — the history is technically incomplete. This is usually acceptable for adding columns.
 
+**Convert hidden `ROW_START`/`ROW_END` to explicit columns** (11.7+, MDEV-27293) — once a table is versioned with the hidden form (no `PERIOD FOR SYSTEM_TIME` clause), you can promote them to explicit columns later without dropping versioning. Useful if you initially started simple and later want transaction-precise history or explicit naming for tooling.
+
 ## Key Gotchas
 
 - **`TRUNCATE` is prohibited** on versioned tables (error 4137). Use `DELETE HISTORY` or partition management instead.
 - **Replication**: `ROW_END` is implicitly added to the Primary Key. On replicas, this can cause duplicate key errors during log replay. Fix: set `secure_timestamp = YES` on the replica.
 - **Backups**: `mysqldump` / `mariadb-dump` skips historical rows by default. Use `--dump-history` (10.11+) to include them.
 - **Table growth**: without partitioning, history rows accumulate indefinitely. Plan partitioning from the start for high-update tables.
-- **DELETE HISTORY with future timestamps**: using `BEFORE SYSTEM_TIME` with a timestamp beyond `ROW_END` max (2038-01-19) can accidentally delete active rows (MDEV-25468). Stay well below that date.
+- **DELETE HISTORY with future timestamps**: using `BEFORE SYSTEM_TIME` with a timestamp beyond `ROW_END` max can accidentally delete active rows (MDEV-25468). The `ROW_END` max is `2038-01-19` on 32-bit platforms and on MariaDB before 11.5; on MariaDB 11.5+ on 64-bit it's extended to `2106-02-07 06:28:15 UTC` (MDEV-32188). Stay well below your platform's max.
 - **`SYSTEM` as a column name**: causes parser errors in `ALTER TABLE` statements. Use backticks: `` `SYSTEM` ``.
 
 ## Use Cases

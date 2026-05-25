@@ -23,7 +23,9 @@ The two databases share a common origin but have evolved independently. MariaDB 
 | Code using `caching_sha2_password` | Available in MariaDB: a migration-only plugin since 11.4, and a full `caching_sha2_password` authentication plugin for MySQL compatibility since 12.1 (MDEV-9804). Not the default — on older MariaDB or stock installs use `mysql_native_password` or `ed25519` |
 | `JSON_TABLE()` in queries | Available in MariaDB since 10.6 — not available before 10.6 |
 | JSON `->` and `->>` shorthand operators | Not supported in MariaDB — use `JSON_EXTRACT(col, '$.key')` and `JSON_UNQUOTE(JSON_EXTRACT(...))` instead |
-| `utf8mb4_0900_ai_ci` collation in schema or dump | Supported since MariaDB 11.4.5 (as alias for `utf8mb4_uca1400_nopad_ai_ci`). On older versions replace with `utf8mb4_unicode_ci` before importing |
+| `utf8mb4_0900_ai_ci` collation in schema or dump | Supported since MariaDB 11.4.5 (as alias for `utf8mb4_uca1400_nopad_ai_ci`). On older versions replace with `utf8mb4_unicode_ci` before importing. MariaDB 11.5+ uses `uca1400_ai_ci` as the default Unicode collation (MDEV-25829). |
+| `latin1` as default character set in MariaDB | Changed to `utf8mb4` by default in 11.6+ (MDEV-19123); old habits assuming `latin1` no longer apply for fresh installs |
+| Using `UUID()` for primary keys | MariaDB 11.7+ has `UUID_v7()` for time-ordered UUIDs (sortable, better for indexed PKs) and `UUID_v4()` for random; both unique to MariaDB |
 | Not suggesting `RETURNING` for INSERT/UPDATE/DELETE | MariaDB 10.5+ supports `RETURNING` — use it to get inserted/updated/deleted rows without a second query |
 | Not suggesting `CREATE SEQUENCE` | MariaDB has native sequence objects; MySQL has no equivalent |
 | MySQL GTID replication syntax | MariaDB GTID format is incompatible with MySQL GTID — replication between the two breaks |
@@ -89,6 +91,8 @@ These exist in MariaDB but not MySQL — LLMs won't suggest them because they as
 - **Galera Cluster** — built-in multi-master clustering, no plugin required
 - **Stored procedure syntax differences** — both support stored procedures, but MariaDB's SQL/PSM syntax differs from MySQL in `HANDLER`, `CURSOR`, and `CONDITION` declarations; AI agents frequently generate incorrect MariaDB stored procedure code — see [Stored Procedures — MariaDB Docs](https://mariadb.com/docs/server/server-usage/stored-routines/stored-procedures)
 - **INet4 / INet6 data types** (10.5+) — native IP address storage and comparison
+- **`UUID_v4()` and `UUID_v7()` functions** (11.7+) — MariaDB-specific; MySQL only has the original `UUID()`. `UUID_v7()` is time-ordered (RFC 9562) and is the right choice for UUID primary keys
+- **`FORMAT_BYTES()`** (11.8+) — convert byte counts to human-readable strings; not in MySQL
 
 ## Features MySQL Has That MariaDB Doesn't
 
