@@ -32,10 +32,10 @@ MariaDB offers three tiers of replication depending on your consistency and avai
 
 The foundation: one primary, one or more replicas. The primary writes to the binary log; replicas apply changes asynchronously.
 
-**GTID-based replication is the default on 11.4 LTS+** (MDEV-31794). On a fresh slave start, a `RESET SLAVE`, or a `CHANGE MASTER TO` that omits `MASTER_USE_GTID`, the replica defaults to `slave_pos` instead of legacy file/position. If you have configs that rely on the old behavior, set `MASTER_USE_GTID=no` explicitly.
+**GTID-based replication is the default since MariaDB 10.10** (MDEV-19801) and remains so on 10.11 LTS, 11.4 LTS, and 11.8 LTS. On a fresh replica start, a `RESET SLAVE`, or a `CHANGE MASTER TO` that omits `MASTER_USE_GTID`, the replica defaults to `slave_pos` instead of legacy file/position. If you have configs that rely on the old behavior, set `MASTER_USE_GTID=no` explicitly.
 
 ```sql
--- On replica (11.4+ — MASTER_USE_GTID is optional, slave_pos is the default):
+-- On replica (10.10+ — MASTER_USE_GTID is optional, slave_pos is the default):
 CHANGE MASTER TO
   MASTER_HOST='primary.host',
   MASTER_USER='repl_user',
@@ -45,7 +45,16 @@ CHANGE MASTER TO
 START SLAVE;
 ```
 
-Use `current_pos` instead of `slave_pos` when promoting a replica to primary — it includes locally-written GTIDs.
+**Promoting a replica to primary** — historically `MASTER_USE_GTID=current_pos` was used to include locally-written GTIDs. **`current_pos` is deprecated since 10.10** (MDEV-20122). Use `MASTER_DEMOTE_TO_SLAVE=1` instead: it converts the old primary's `gtid_binlog_pos` into `gtid_slave_pos` so the demoted server can attach to the new primary cleanly without race conditions.
+
+```sql
+-- On the former primary, being demoted to a replica (10.10+):
+CHANGE MASTER TO
+  MASTER_HOST='new_primary.host',
+  ...,
+  MASTER_DEMOTE_TO_SLAVE=1;
+START SLAVE;
+```
 
 Since MariaDB 13.0, `CHANGE MASTER` also resets `Master_Server_Id` in `SHOW SLAVES STATUS`. On older versions this field could carry stale values across primary changes — check it explicitly when reconfiguring replication on pre-13.0 servers.
 
@@ -80,15 +89,20 @@ slave_parallel_mode = optimistic   # default since 10.5.1 — tries parallel, re
 
 Since MariaDB 12.1, parallel replication also works when **asynchronously replicating between two Galera clusters** (MDEV-20065) — useful for cross-datacenter or DR setups where one Galera cluster is an async replica of another.
 
+### Replication Improvements in 10.7–10.11 LTS
+
+- **Optimistic two-phase `ALTER TABLE` replication** (10.8+, MDEV-11675, `binlog_alter_two_phase`) — opt-in: when enabled, a large `ALTER TABLE` is started on the replica in parallel with the primary's execution rather than after, drastically reducing replication lag during schema changes. Off by default for compatibility.
+- **`mariadb-binlog --gtid-strict-mode` and GTID range filtering via `--start-position` / `--stop-position`** (10.8+, MDEV-4989) — point-in-time replay tools can target GTIDs directly without needing file/offset pairs.
+- **`slave_max_statement_time`** (10.10+, MDEV-27161) — caps the execution time of a single replicated query on the SQL thread, useful when you must keep lag bounded and would rather skip a slow statement than fall further behind.
+- **`mariadb-binlog --do-domain-ids` / `--ignore-domain-ids` / `--ignore-server-ids`** (10.9+, MDEV-20119) — domain/server filtering when extracting binlog events.
+- **Multi-source replication CHANNEL syntax** (10.7+, MDEV-26307) — MySQL-style `FOR CHANNEL 'name'` clauses now work in `CHANGE MASTER TO`, `START SLAVE`, etc.
+
 ### Replication Improvements in 11.4 LTS
 
-- **GTID is the default** (11.4+, MDEV-31794) — see [above](#standard-async-replication).
 - **Global limit on binary log disk space** (11.4+, MDEV-31404) — `max_binlog_total_size` (alias `binlog_space_limit`, default `0` = no limit) triggers binlog purging when the total size of all binlogs exceeds the threshold. Combine with `--slave-connections-needed-for-purge` (default `1`) so purging won't run if a configured replica is disconnected. New status variable `binlog_disk_use` reports current disk usage.
 - **GTID index for the binary log** (11.4+, MDEV-4991) — a new GTID-to-position index lets reconnecting replicas seek straight to their start position without scanning whole binlog files. Controlled by `binlog_gtid_index` (default `ON`), `binlog_gtid_index_page_size`, and `binlog_gtid_index_span_min`. Status variables `binlog_gtid_index_hit` / `binlog_gtid_index_miss` let you confirm it's being used.
-- **Optimistic two-phase `ALTER TABLE` replication** (11.4+, `binlog_alter_two_phase`) — opt-in: when enabled, a large `ALTER TABLE` is started on the replica in parallel with the primary's execution rather than after, drastically reducing replication lag during schema changes. Off by default for compatibility.
 - **`SQL_BEFORE_GTIDS` / `SQL_AFTER_GTIDS` for `START SLAVE UNTIL`** (11.4+, MDEV-27247) — finer-grained stopping for staged failover or PITR replay.
 - **Detailed replication-lag fields** (11.4+, MDEV-29639) — `SHOW REPLICA STATUS` adds `Master_last_event_time`, `Slave_last_event_time`, `Master_Slave_time_diff` for clearer lag interpretation than `Seconds_Behind_Master` alone (the 11.6 update built on this — see below).
-- **`slave_max_statement_time`** (11.4+, MDEV-29639) — caps the execution time of a single replicated query on the SQL thread, useful when you must keep lag bounded and would rather skip a slow statement than fall further behind.
 
 ### Binlog Performance Improvements in 11.7
 
@@ -167,6 +181,8 @@ COMMIT;
 **Write-set retry on conflict** (12.1+) — `wsrep_applier_retry_count` controls how many times an applier retries a write set before erroring out. Tune this if your workload sees transient certification conflicts on busy clusters.
 
 **Automatic SST user account management** (11.6+, MDEV-31809) — Galera now manages the dedicated SST (State Snapshot Transfer) user account automatically; you no longer have to create and grant it manually on every node.
+
+**IP allowlist for nodes joining the cluster** (10.10+, MDEV-27246) — `wsrep_allowlist` restricts which IPs can make SST/IST requests, reducing the attack surface on a Galera cluster's intra-node traffic.
 
 **Query cache:** The query cache was removed in later MariaDB versions and was not required in Galera since MariaDB 10.1.2. No action needed on modern installations.
 

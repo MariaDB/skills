@@ -187,15 +187,24 @@ SET optimizer_switch = 'derived_merge=on';
 
 Turn flags off one at a time to isolate which optimization is causing a bad plan, then report via JIRA if a default setting produces a worse plan than the alternative.
 
-### Optimizer Improvements in 11.4 LTS (and the 11.0–11.3 path)
+### Optimizer Improvements in the 10.7–10.11 LTS Window
 
-The 11.4 LTS line bundles a multi-version optimizer overhaul. The biggest items:
+The 10.11 LTS line bundles features that arrived in the 10.7–10.10 short-term releases:
+
+- **JSON-format histograms** (10.8+, MDEV-21130, MDEV-26519) — histogram statistics are stored in JSON and are more precise than the older binary format. Just running `ANALYZE TABLE` on 10.8+ gives the optimizer better cardinality estimates.
+- **Descending indexes** (10.8+, MDEV-13756) — `CREATE INDEX idx ON t (a ASC, b DESC)` is supported; useful for composite `ORDER BY a, b DESC` patterns and for `MIN()`/`MAX()` on descending indexes.
+- **`SHOW ANALYZE [FORMAT=JSON]`** (10.9+, MDEV-27021) — get the optimizer plan and runtime stats for a query running in another connection without intrusion. `EXPLAIN FOR CONNECTION` syntax also supported (MDEV-10000).
+- **Improved optimization for joins with many `eq_ref` tables** (10.10+, MDEV-28852, MDEV-26278) — large star-schema-style joins plan dramatically better.
+- **`ANALYZE FORMAT=JSON` reports time spent in the optimizer itself** (10.11+, MDEV-28926) — separates planning time from execution time.
+
+### Optimizer Improvements in 11.4 LTS
+
+The 11.4 LTS line continues the overhaul:
 
 - **New cost-based cost model** (11.0+) — replaces the older rule-based heuristics with a tuned model aware of SSDs and per-engine characteristics. `EXPLAIN` and join-order choices in 10.6 vs. 11.4 can differ noticeably on the same query. If you have manual `optimizer_adjust_secondary_key_costs` settings from 10.x, remove them — they're no-ops on 11.4+.
 - **Semi-join optimization for single-table `UPDATE`/`DELETE`** (11.1+, MDEV-7487) — subqueries inside `UPDATE`/`DELETE` can now use the same subquery rewrites that `SELECT` uses (materialization, semi-join, etc.). Often a large speedup, no rewrite needed.
 - **Sargable `DATE`/`YEAR` comparisons against constants** (11.1+, MDEV-8320) — see [Functions on Indexed Columns](#functions-on-indexed-columns) above.
 - **Sargable case-folding** (11.3+, MDEV-31496, `sargable_casefold` on by default) — `UCASE`/`LCASE`/`UPPER`/`LOWER` on a column with a case-insensitive collation can use the index.
-- **Descending indexes** (11.4+) — `CREATE INDEX idx ON t (a ASC, b DESC)` is supported; useful for composite `ORDER BY a, b DESC` patterns and for `MIN()`/`MAX()` on descending indexes.
 
 ### Optimizer Improvements in 11.5–11.8 LTS
 

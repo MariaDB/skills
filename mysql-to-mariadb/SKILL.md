@@ -60,10 +60,12 @@ MariaDB and MySQL handle JSON differently:
 | JSON comparison | Semantic (compares values) | String comparison |
 | `JSON_QUERY()` | Not available | MariaDB alternative to `JSON_VALUE` |
 | JSON nesting depth limit | None | 32 in older MariaDB; removed in 12.2+ |
-| `JSON_SCHEMA_VALID()`, `JSON_OVERLAPS()`, `JSON_NORMALIZE()`, `JSON_EQUALS()` | Supported (8.0.17+) | Added in MariaDB 11.4 LTS — code using these now runs unchanged |
-| Negative / `last` / range JSON path indices (`$.A[-1]`, `$.A[last]`, `$.A[1 to 3]`) | Not supported | Supported from MariaDB 11.4 LTS |
+| `JSON_EQUALS()` / `JSON_NORMALIZE()` | Supported (8.0.22+) | MariaDB 10.7+ (MDEV-23143 / MDEV-16375) |
+| `JSON_OVERLAPS()` | Supported (8.0.17+) | MariaDB 10.9+ (MDEV-27677) |
+| Negative / `last` / range JSON path indices (`$.A[-1]`, `$.A[last]`, `$.A[1 to 3]`) | Not supported | MariaDB 10.9+ |
+| `JSON_SCHEMA_VALID()` | Supported (8.0.17+) | MariaDB 11.4 LTS+ |
 
-MariaDB 11.4 LTS closed most of the JSON function gap with MySQL 8.0. MariaDB-specific additions that MySQL still lacks: `JSON_KEY_VALUE()`, `JSON_ARRAY_INTERSECT()`, `JSON_OBJECT_TO_ARRAY()`, `JSON_OBJECT_FILTER_KEYS()`, and the `JSON_QUERY()` alias.
+MariaDB closed most of the JSON function gap with MySQL 8.0 between 10.7 and 11.4. MariaDB-specific additions that MySQL still lacks: `JSON_KEY_VALUE()`, `JSON_ARRAY_INTERSECT()`, `JSON_OBJECT_TO_ARRAY()`, `JSON_OBJECT_FILTER_KEYS()` (11.4+), and the `JSON_QUERY()` alias.
 
 MariaDB's JSON is fully standards-compliant, but MySQL-specific storage layout, the `->`/`->>` shorthand operators, and the `JSON_SCHEMA_VALIDATION_REPORT()` function do not transfer.
 
