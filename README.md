@@ -2,8 +2,6 @@
 
 Skills for AI agents working with MariaDB.
 
-> Open for improvements and more skills. Contributions welcome.
-
 ## Install
 
 To browse and choose from all MariaDB skills interactively:
@@ -96,4 +94,6 @@ Replace `<skill-name>` with the skill name, e.g. `mariadb-vector` or `mysql-to-m
 
 These skills teach AI agents the MariaDB-specific knowledge they need to give correct advice — particularly where MariaDB differs from MySQL or PostgreSQL defaults.
 
-Contributions and feedback welcome via pull requests.
+## Contributions and Improvements
+
+Open for improvements and more skills. Contributions and feedback welcome via pull requests.
