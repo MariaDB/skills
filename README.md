@@ -1,86 +1,70 @@
 # MariaDB Agent Skills
 
-Skills for AI agents working with MariaDB.
+Short **SKILL.md** briefings for AI coding agents — so they get right what they often get wrong about MariaDB (MySQL compatibility, vectors, replication, Oracle migration, and more). Skills install on the **agent**, not on your MariaDB server.
 
-## Install
+## What is a skill?
 
-To browse and choose from all MariaDB skills interactively:
+A skill is a curated markdown file the agent reads when a topic matches. Think of it as a briefing note: MariaDB-specific guidance, common LLM mistakes, and pointers to [mariadb.com/docs](https://mariadb.com/docs).
 
-```
-npx skills add mariadb
-```
-
-Or install a specific skill directly using the commands below.
+Skills work with Claude Code, GitHub Copilot, Cursor, OpenAI Codex, and 20+ other tools. Learn more at [agentskills.io](https://agentskills.io) and browse community skills at [skills.sh](https://www.skills.sh).
 
 ## Skills
 
-### mysql-to-mariadb
+Eight skills at **[github.com/mariadb/skills](https://github.com/mariadb/skills)** — each for a different situation where agents need MariaDB-specific guidance. Install instructions and how to suggest improvements follow below.
 
-Compatibility guide for developers moving from MySQL to MariaDB, or where MySQL habits cause unexpected behavior. Covers authentication differences, JSON handling, features MySQL has that MariaDB doesn't, and features MariaDB has that MySQL doesn't — including things LLMs won't suggest because they assume MySQL behavior.
+### [mysql-to-mariadb](https://github.com/MariaDB/skills/blob/main/mysql-to-mariadb/SKILL.md)
 
-```
-npx skills add mariadb/skills/mysql-to-mariadb
-```
+For developers migrating from MySQL, or where MySQL habits cause unexpected behavior in MariaDB. Covers authentication, JSON differences, GTID incompatibility with MySQL, and features MariaDB has that MySQL does not.
 
-### oracle-to-mariadb
+### [mariadb-features](https://github.com/MariaDB/skills/blob/main/mariadb-features/SKILL.md)
 
-Compatibility guide for developers migrating from Oracle Database to MariaDB. MariaDB is the only open source database with native PL/SQL compatibility — MariaDB's `sql_mode=ORACLE` enables approximately 80% of Oracle code to run without rewrites. Covers data type mapping, PL/SQL compatibility, what needs manual rewriting, and migration tools.
+For developers who want to use MariaDB well or evaluate a migration. System-versioned tables, `RETURNING`, sequences, instant DDL, native IP types, Oracle compatibility mode, Galera, ColumnStore, and more — the things agents rarely suggest unprompted.
 
-```
-npx skills add mariadb/skills/oracle-to-mariadb
-```
+### [oracle-to-mariadb](https://github.com/MariaDB/skills/blob/main/oracle-to-mariadb/SKILL.md)
 
-### mariadb-features
+For developers migrating from Oracle Database. `sql_mode=ORACLE`, PL/SQL compatibility, data type mapping, what needs manual rewriting, and migration tools.
 
-MariaDB-specific features worth knowing about — the things AI agents don't suggest because they default to generic SQL advice. Covers system-versioned tables, RETURNING, sequences, instant DDL, native IP types, Oracle compatibility mode, Galera, ColumnStore, and more.
+### [mariadb-query-optimization](https://github.com/MariaDB/skills/blob/main/mariadb-query-optimization/SKILL.md)
 
-```
-npx skills add mariadb/skills/mariadb-features
-```
+For diagnosing slow queries and designing indexes. EXPLAIN, composite index rules, cursor-based pagination, histograms, and MariaDB-specific optimizer behavior.
 
-### mariadb-query-optimization
+### [mariadb-replication-and-ha](https://github.com/MariaDB/skills/blob/main/mariadb-replication-and-ha/SKILL.md)
 
-Query optimization for MariaDB — EXPLAIN analysis, indexing strategies, composite index rules, cursor-based pagination, histogram statistics, and MariaDB-specific optimizer settings. For diagnosing slow queries and designing indexes that actually work.
+For replicated and HA setups — async replication, GTID, semi-sync, parallel replication, Galera Cluster, and application constraints that matter in production.
 
-```
-npx skills add mariadb/skills/mariadb-query-optimization
-```
+### [mariadb-system-versioned-tables](https://github.com/MariaDB/skills/blob/main/mariadb-system-versioned-tables/SKILL.md)
 
-### mariadb-replication-and-ha
+For automatic row history without triggers or audit tables — `FOR SYSTEM_TIME` queries, partitioning, and gotchas.
 
-Replication and high availability in MariaDB — standard async replication, GTID setup, semi-synchronous replication, parallel replication, Galera Cluster, and application patterns for HA environments. Galera is built into MariaDB with no plugins required. MariaDB GTID format is incompatible with MySQL GTID.
+### [mariadb-vector](https://github.com/MariaDB/skills/blob/main/mariadb-vector/SKILL.md)
 
-```
-npx skills add mariadb/skills/mariadb-replication-and-ha
-```
+For AI applications, RAG, and semantic search. Native vector support since MariaDB 11.7 — no extension or plugin to install.
 
-### mariadb-system-versioned-tables
+### [mariadb-mcp](https://github.com/MariaDB/skills/blob/main/mariadb-mcp/SKILL.md)
 
-MariaDB's built-in temporal data feature — automatic row history without triggers or audit tables. Query data as it existed at any point in the past using `FOR SYSTEM_TIME`. Covers all query forms, partitioning for history management, column-level control, and key gotchas. Unique to MariaDB among MySQL-compatible databases.
+For connecting agents to a MariaDB database via the Model Context Protocol — schemas, read-only SQL, optional semantic search, and secure setup.
+
+Skills use wrong/right pairs, version annotations, and links to official documentation so agents can tailor advice to the MariaDB version you run.
+
+## How to install
+
+Use [npx skills](https://github.com/vercel-labs/skills) for an interactive install — choose which MariaDB skills to install and which agents on your system (Claude, Cursor, Codex, etc.):
 
 ```
-npx skills add mariadb/skills/mariadb-system-versioned-tables
+npx skills add mariadb/skills
 ```
 
-### mariadb-vector
-
-Best practices for using MariaDB's built-in vector support for AI and semantic search. Covers RAG patterns, vector indexes, distance functions, embedding model selection, and framework integrations (LangChain, LlamaIndex, Spring AI). Unlike MySQL (no vector support) or PostgreSQL (which requires pgvector), MariaDB has native vector support since version 11.7 — no extensions or plugins needed.
+Or install one skill:
 
 ```
-npx skills add mariadb/skills/mariadb-vector
+npx skills add mariadb/skills/<skill-name>
 ```
 
-### mariadb-mcp
+Replace `<skill-name>` with e.g. `mariadb-vector` or `mysql-to-mariadb`. Installs are counted on [skills.sh](https://www.skills.sh).
 
-Connect AI agents to MariaDB using the Model Context Protocol (MCP). The open source MariaDB MCP Server lets agents list databases and tables, read schemas, run read-only SQL queries, and optionally perform semantic search. Covers installation, Claude Code configuration, available tools, security setup, and gotchas.
+### Installing without Node.js
 
-```
-npx skills add mariadb/skills/mariadb-mcp
-```
-
-## Installing without Node.js
-
-Without Node.js, you can install a skill for an agent directly, e.g. for Claude Code like this:
+Download `SKILL.md` into the agent's skill folder, for example:
 
 ```bash
 mkdir -p ~/.claude/skills/<skill-name>
@@ -88,11 +72,12 @@ curl -o ~/.claude/skills/<skill-name>/SKILL.md \
   https://raw.githubusercontent.com/mariadb/skills/main/<skill-name>/SKILL.md
 ```
 
-Replace `<skill-name>` with the skill name, e.g. `mariadb-vector` or `mysql-to-mariadb`.
+- Claude Code and Claude Desktop: `~/.claude/skills/<skill-name>/SKILL.md`
+- OpenAI Codex: `~/.agents/skills/<skill-name>/SKILL.md`
 
-## About
+## Using MariaDB skills
 
-These skills teach AI agents the MariaDB-specific knowledge they need to give correct advice — particularly where MariaDB differs from MySQL or PostgreSQL defaults.
+Once installed, skills activate automatically. When your question matches a skill's topic, the agent reads it and applies the guidance for that session. No manual activation is needed.
 
 ## Contributions and Improvements
 
