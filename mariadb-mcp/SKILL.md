@@ -5,7 +5,7 @@ description: "How to connect AI agents to MariaDB using the Model Context Protoc
 
 # MariaDB MCP Server
 
-*Last updated: 2026-05-21*
+*Last updated: 2026-05-25*
 
 The Model Context Protocol (MCP) lets AI agents connect to external tools and data sources. The MariaDB MCP Server gives agents direct, controlled access to a MariaDB database — reading schemas, running queries, and optionally performing vector/semantic search — without requiring the developer to write integration code.
 
@@ -49,39 +49,40 @@ MCP_READ_ONLY=true
 uv run server.py
 ```
 
-## Connecting to Claude Code
+## Connecting Claude Code, Cursor, or Windsurf
 
-The `uvx mcp-server-mariadb` command below uses a third-party PyPI package (`mcp-server-mariadb`), not the official `github.com/MariaDB/mcp` repo. Verify which you want before proceeding — the official repo uses `uv run server.py` from a local clone (see Installation above).
+Use the official server from a local clone (see Installation). Point your MCP config at `uv run server.py` and the `.env` file with database credentials.
 
-Add the MCP server to Claude Code with:
+**Claude Code** (project-scoped `.mcp.json` at the repo root):
 
-```bash
-claude mcp add mariadb -- uvx mcp-server-mariadb \
-  --host 127.0.0.1 \
-  --port 3306 \
-  --user myuser \
-  --password mypassword \
-  --database mydatabase
-```
-
-Or configure in `.mcp.json` at the project root (project-scoped, shared with collaborators):
 ```json
 {
   "mcpServers": {
     "mariadb": {
-      "command": "uvx",
+      "command": "uv",
       "args": [
-        "mcp-server-mariadb",
-        "--host", "127.0.0.1",
-        "--port", "3306",
-        "--user", "myuser",
-        "--password", "mypassword",
-        "--database", "mydatabase"
-      ]
+        "--directory",
+        "/absolute/path/to/mcp",
+        "run",
+        "server.py"
+      ],
+      "envFile": "/absolute/path/to/mcp/.env"
     }
   }
 }
 ```
+
+Or add via CLI (replace paths):
+
+```bash
+claude mcp add mariadb -- uv --directory /absolute/path/to/mcp run server.py
+```
+
+**Cursor / VS Code** — same `mcpServers` block in MCP settings; use absolute paths.
+
+**SSE or HTTP** — run `uv run server.py --transport sse` (or `http`) and connect to the URL; see [MariaDB/mcp README — Integration](https://github.com/MariaDB/mcp#integration---claude-desktopcursorwindsurfvscode).
+
+> **Not official:** PyPI package `mcp-server-mariadb` (`uvx mcp-server-mariadb`) is a third-party project, not maintained by the MariaDB Foundation. Prefer `github.com/MariaDB/mcp` unless you have a specific reason to use the PyPI package.
 
 ## Available Tools
 
@@ -131,7 +132,7 @@ Application-level read-only alone is not sufficient — database-level privilege
 - **`uv` is required**: the MCP server uses `uv` for dependency management, not `pip` directly. Install: `pip install uv` or `brew install uv`.
 - **Read-only is not fully enforced in software**: rely on database-level privileges, not just `MCP_READ_ONLY=true`.
 - **Vector tools are disabled** until `EMBEDDING_PROVIDER` is set in `.env`.
-- **Connection pooling** defaults to 10 connections — tune `MCP_POOL_SIZE` for concurrent agent use.
+- **Connection pooling** defaults to 10 connections — tune `MCP_MAX_POOL_SIZE` for concurrent agent use.
 - **SSL/TLS**: configure `DB_SSL_CA`, `DB_SSL_CERT`, `DB_SSL_KEY` in `.env` for remote or production databases.
 - **Enterprise version**: MariaDB also offers a MariaDB Enterprise MCP Server with additional access control and multi-agent features. See [mariadb.com/products/mcp-server](https://mariadb.com/products/mcp-server/).
 

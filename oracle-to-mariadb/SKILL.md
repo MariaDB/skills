@@ -35,7 +35,7 @@ Without this, PL/SQL syntax, Oracle data type synonyms, and Oracle-style functio
 |---|---|
 | PL/SQL that fails with syntax errors | Set `sql_mode=ORACLE` first — without it, PL/SQL constructs are not recognized |
 | Oracle `DATE` mapped to MariaDB `DATE` | Oracle `DATE` stores date AND time — map to `DATETIME`, not `DATE` |
-| Assuming 100% PL/SQL compatibility | ~80% works without changes; `SYNONYM`, `INSERT ALL`, `(+)` joins, `CONNECT BY` require rewrites |
+| Assuming 100% PL/SQL compatibility | ~80% works without changes; `SYNONYM`, `INSERT ALL`, and `CONNECT BY` usually require rewrites — `(+)` joins work in Oracle mode on 12.1+ (see next row) |
 | `SYNONYM` usage in schema or code | No equivalent in MariaDB — replace with views or direct object references |
 | `(+)` outer join notation | Supported in Oracle mode since MariaDB 12.1 (MDEV-13817) — on older versions rewrite as `LEFT JOIN` / `RIGHT JOIN` |
 | `START WITH ... CONNECT BY` | Not supported — rewrite as recursive CTE using `WITH RECURSIVE` |
