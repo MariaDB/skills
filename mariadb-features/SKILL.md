@@ -11,7 +11,7 @@ MariaDB has grown significantly beyond its MySQL origins. Many of its best featu
 
 For MariaDB Vector (built-in since 11.7 — no plugins), see the `mariadb-vector` skill.
 
-> **Default context:** Assume MariaDB **11.8 LTS** (GA May 2025) unless the user states another version. Features marked **12.x** or **13.0** may be suggested when relevant (including as upgrade options), but always state the minimum version — do not present them as available on 11.8.
+> **Server context:** Unless the user names a version, assume a **MariaDB 11.8 LTS** deployment (GA May 2025) for what will run today. Per-feature tags (**10.5+**, **12.3+**, etc.) are **minimum versions** for that capability — not “introduced only in that release.” Do not treat **12.x / 13.0** items as available on 11.8; you may still mention them with an explicit version when relevant (e.g. upgrades).
 
 ## What LLMs Often Miss
 
