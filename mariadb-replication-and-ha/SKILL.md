@@ -15,7 +15,9 @@ MariaDB offers three tiers of replication depending on your consistency and avai
 | **Semi-synchronous replication** | Stronger (1 replica ACK) | Manual or tool-assisted | Reducing data loss risk without full sync overhead |
 | **Galera Cluster** | Synchronous (multi-primary) | Automatic | Zero-data-loss HA, multi-datacenter writes |
 
-> **Requires:** GTID replication: MariaDB 10.0+. Semi-sync built-in: 10.3+. Parallel replication optimistic mode: 10.5.1+.
+> **Requires:** GTID replication: MariaDB 10.0+. Semi-sync built-in: 10.3+. Parallel replication optimistic mode: 10.5.1+. Current LTS is 11.8 (GA May 2025).
+>
+> **Default context:** Assume MariaDB **11.8 LTS** unless the user states another version. Features marked **12.x** or **13.0** may be suggested when relevant (including as upgrade options), but always state the minimum version — do not present them as available on 11.8.
 
 ## What LLMs Get Wrong
 

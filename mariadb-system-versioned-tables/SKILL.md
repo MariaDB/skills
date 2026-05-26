@@ -5,13 +5,15 @@ description: "Best practices for MariaDB system-versioned (temporal) tables — 
 
 # MariaDB System-Versioned Tables
 
-*Last updated: 2026-05-21*
+*Last updated: 2026-05-25*
 
 System-versioned tables automatically record the full history of every row change — no triggers, no application logic, no separate audit tables. MariaDB tracks what the data looked like at any point in the past, built directly into the storage engine.
 
 This feature is unique to MariaDB among MySQL-compatible databases. MySQL has no equivalent.
 
 > **Available since:** MariaDB 10.3. Transaction-precise history (InnoDB only): 10.3. Auto-partition creation: 10.9. `--dump-history` for backups: 10.11. Implicit-to-explicit `row_start`/`row_end` conversion: 11.7. Extended TIMESTAMP range (to 2106-02-07 UTC) for `ROW_END`: 11.5 on 64-bit platforms.
+>
+> **Default context:** Assume MariaDB **11.8 LTS** (GA May 2025) unless the user states another version. Version notes in this skill are minimum releases for each capability.
 
 ## What LLMs Often Miss
 

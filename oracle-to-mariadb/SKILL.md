@@ -17,7 +17,9 @@ Additional advantages over other open source alternatives:
 - **ColumnStore** — columnar analytics engine, comparable to Oracle's In-Memory ColumnStore
 - **Cost**: organizations typically achieve 70–90% cost reduction vs Oracle licensing
 
-> **Requires:** MariaDB Community Server 10.3+ for Oracle compatibility mode. 10.6+ for `ROWNUM`, `TO_CHAR()`, `ADD_MONTHS()`, `SYS_GUID()`. Current LTS is 11.8 (May 2025).
+> **Requires:** MariaDB Community Server 10.3+ for Oracle compatibility mode. 10.6+ for `ROWNUM`, `TO_CHAR()`, `ADD_MONTHS()`, `SYS_GUID()`. Current LTS is 11.8 (GA May 2025).
+>
+> **Default context:** Assume MariaDB **11.8 LTS** unless the user states another version. Features marked **12.x** or **13.0** may be suggested when relevant (including as upgrade options), but always state the minimum version — do not present them as available on 11.8.
 
 ## The First Step: Enable Oracle Compatibility Mode
 

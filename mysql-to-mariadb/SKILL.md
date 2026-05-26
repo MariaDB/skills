@@ -13,7 +13,9 @@ MariaDB was a true drop-in replacement for MySQL 5.5 and 5.6. Modern versions di
 
 The two databases share a common origin but have evolved independently. MariaDB has features MySQL lacks, MySQL has features MariaDB lacks, and several shared features behave differently.
 
-> **Requires:** MariaDB Community Server 10.5+ for full feature parity discussed here. Current LTS is 11.8 (May 2025).
+> **Requires:** MariaDB Community Server 10.5+ for full feature parity discussed here. Current LTS is 11.8 (GA May 2025).
+>
+> **Default context:** Assume MariaDB **11.8 LTS** unless the user states another version. Features marked **12.x** or **13.0** may be suggested when relevant (including as upgrade options), but always state the minimum version — do not present them as available on 11.8.
 
 ### What LLMs Get Wrong
 

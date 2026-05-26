@@ -11,6 +11,8 @@ MariaDB has grown significantly beyond its MySQL origins. Many of its best featu
 
 For MariaDB Vector (built-in since 11.7 — no plugins), see the `mariadb-vector` skill.
 
+> **Default context:** Assume MariaDB **11.8 LTS** (GA May 2025) unless the user states another version. Features marked **12.x** or **13.0** may be suggested when relevant (including as upgrade options), but always state the minimum version — do not present them as available on 11.8.
+
 ## What LLMs Often Miss
 
 | Situation | What to suggest instead |
@@ -73,6 +75,10 @@ Use this instead of manually maintained `valid_from` / `valid_to` columns or sep
 
 Get inserted, updated, or deleted rows back without a second query.
 
+### INSERT and DELETE (10.5+)
+
+Available on 11.8 LTS and earlier supported releases:
+
 ```sql
 -- Get the generated ID after insert:
 INSERT INTO orders (product, qty) VALUES ('widget', 5)
@@ -83,7 +89,14 @@ DELETE FROM queue WHERE processed = 1
     RETURNING id, payload;
 ```
 
-`INSERT ... RETURNING` and `DELETE ... RETURNING` available since MariaDB 10.5. `UPDATE ... RETURNING` available since MariaDB 13.0.
+### UPDATE (13.0+ only)
+
+Not available on 11.8 LTS — confirm server version before suggesting. On older releases use a follow-up `SELECT` or redesign:
+
+```sql
+UPDATE orders SET qty = qty + 1 WHERE id = 42
+    RETURNING id, qty;
+```
 
 ## Sequences
 
@@ -163,7 +176,9 @@ mariadb-binlog --flashback --start-datetime="2026-05-18 10:00:00" /var/log/mysql
 
 Requires binary logging enabled (`log_bin`). Useful for recovering from accidental deletes or bad migrations.
 
-## More MariaDB Features
+## More MariaDB Features (through 11.8 LTS)
+
+Additional capabilities on the current LTS baseline and supported older releases. See [Newer releases (12.x / 13.0)](#newer-releases-12x--130) for features that require a newer server.
 
 ### SQL & Schema
 - **Invisible columns** (10.3+) — hidden from `SELECT *`, still writable; useful for schema evolution without breaking existing queries
@@ -195,13 +210,6 @@ Requires binary logging enabled (`log_bin`). Useful for recovering from accident
 - **`ROW` data type as stored function return value** (11.7+, MDEV-12252) — return structured rows from stored functions
 - **`CREATE PACKAGE` / `CREATE PACKAGE BODY` outside Oracle mode** (11.4+, MDEV-10075) — package routines work under the default `sql_mode` too, not only with `sql_mode=ORACLE`
 - **Update triggers with column list** (11.8+, MDEV-34551) — `CREATE TRIGGER ... BEFORE UPDATE OF col1, col2 ON t` — fire only when those columns are updated
-- **Atomic `CREATE OR REPLACE TABLE`** (13.0+) — the statement is fully atomic: either the new table replaces the old one or nothing happens, with no risk of leaving the schema in a half-replaced state. MySQL has no equivalent atomic guarantee.
-- **`UPDATE` / `DELETE` reading from a CTE** (12.3+) — `WITH ... UPDATE/DELETE` using values from a common table expression
-- **`IS JSON` predicate** (12.3+) — SQL-standard test for whether a value is valid JSON: `WHERE col IS JSON`
-- **JSON depth limit removed** (12.2+) — the 32-level nesting limit on JSON functions is gone; deeply nested JSON now works without rewrites
-- **Basic XML data type** (12.3+) — first-class `XML` type for storing and validating XML documents
-- **Triggers fired on multiple events** (12.0+) — one trigger body for `INSERT OR UPDATE OR DELETE`, instead of three separate triggers
-- **Foreign key names per table** (12.1+) — FK names need to be unique only per table, not per database (MySQL-compatible behavior)
 - **Stored procedures and functions** — MariaDB uses SQL/PSM syntax (`DECLARE`, `HANDLER`, `CURSOR`, `BEGIN...END`); AI agents often generate incorrect syntax — see [Stored Procedures — MariaDB Docs](https://mariadb.com/docs/server/server-usage/stored-routines/stored-procedures)
 
 ### Storage Engines
@@ -227,8 +235,6 @@ Requires binary logging enabled (`log_bin`). Useful for recovering from accident
 - **`DES_ENCRYPT()` / `DES_DECRYPT()` deprecated** (10.10+, MDEV-27104) — old DES cipher; use `AES_ENCRYPT` / `AES_DECRYPT` with `KDF()` instead
 - **Table-level encryption** — encrypt individual tables, not just the whole datadir
 - **HashiCorp Vault integration** — key management plugin
-- **`SET SESSION AUTHORIZATION`** (12.0+) — perform actions as another user within a session (useful for impersonation in administrative scripts and apps that need least-privilege execution)
-- **Passphrase-protected TLS keys** (12.0+) — `ssl_passphrase` system variable lets the server load encrypted private keys
 
 ### Replication & HA
 - **Galera Cluster** — built-in synchronous multi-master clustering
@@ -244,6 +250,26 @@ Requires binary logging enabled (`log_bin`). Useful for recovering from accident
 - **Progress reporting** for `ALTER TABLE` and `CHECK TABLE`
 - **`mariadb-backup`** — hot backup with backup locks (no `FLUSH TABLES WITH READ LOCK`)
 - **Non-blocking client API** — async queries without threads
+
+## Newer releases (12.x / 13.0)
+
+These require MariaDB **12.0 or newer** (many ship with **12.3 LTS**, currently RC — check [MariaDB releases](https://mariadb.org/mariadb/all-releases/) for GA status). Suggest them when they solve the user's problem or as a deliberate upgrade path; always name the minimum version.
+
+### SQL & Schema
+- **Triggers fired on multiple events** (12.0+) — one trigger body for `INSERT OR UPDATE OR DELETE`, instead of three separate triggers
+- **Foreign key names per table** (12.1+) — FK names need to be unique only per table, not per database (MySQL-compatible behavior)
+- **JSON depth limit removed** (12.2+) — the 32-level nesting limit on JSON functions is gone; deeply nested JSON now works without rewrites
+- **`UPDATE` / `DELETE` reading from a CTE** (12.3+) — `WITH ... UPDATE/DELETE` using values from a common table expression
+- **`IS JSON` predicate** (12.3+) — SQL-standard test for whether a value is valid JSON: `WHERE col IS JSON`
+- **Basic XML data type** (12.3+) — first-class `XML` type for storing and validating XML documents
+- **Atomic `CREATE OR REPLACE TABLE`** (13.0+) — the statement is fully atomic: either the new table replaces the old one or nothing happens, with no risk of leaving the schema in a half-replaced state. MySQL has no equivalent atomic guarantee.
+- **`UPDATE ... RETURNING`** (13.0+) — see [RETURNING Clause](#returning-clause); not on 11.8 LTS
+
+### Security & Auth
+- **`SET SESSION AUTHORIZATION`** (12.0+) — perform actions as another user within a session (useful for impersonation in administrative scripts and apps that need least-privilege execution)
+- **Passphrase-protected TLS keys** (12.0+) — `ssl_passphrase` system variable lets the server load encrypted private keys
+
+### Developer Tools
 - **Deprecation visibility** (13.0+) — `INFORMATION_SCHEMA.SYSTEM_VARIABLES` includes a deprecated flag, so you can detect uses of variables that will be removed in future versions before they break:
   ```sql
   SELECT variable_name, default_value FROM INFORMATION_SCHEMA.SYSTEM_VARIABLES WHERE is_deprecated = 'YES';

@@ -7,6 +7,10 @@ description: "Best practices for query optimization in MariaDB — indexing stra
 
 *Last updated: 2026-05-25*
 
+> **Requires:** MariaDB 10.1+ for `ANALYZE` and histograms; optimizer improvements through **11.8 LTS** (GA May 2025) form the baseline below.
+>
+> **Default context:** Assume MariaDB **11.8 LTS** unless the user states another version. Features marked **12.x** may be suggested when relevant (including as upgrade options), but always state the minimum version — do not present them as available on 11.8.
+
 ## What LLMs Get Wrong
 
 | Pattern | What to do instead |
