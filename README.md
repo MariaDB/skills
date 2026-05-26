@@ -1,6 +1,6 @@
 # MariaDB Agent Skills
 
-Short **SKILL.md** briefings for AI coding agents — so they get right what they often get wrong about MariaDB (MySQL compatibility, vectors, replication, Oracle migration, and more). Skills install on the **agent**, not on your MariaDB server.
+Short **SKILL.md** briefings for AI coding agents — so they get right what they often get wrong about MariaDB (MySQL compatibility, vectors, replication, Oracle migration, and more). Skills install on the **AI agent**, not on your MariaDB server.
 
 ## What is a skill?
 
@@ -10,7 +10,9 @@ Skills work with Claude Code, GitHub Copilot, Cursor, OpenAI Codex, and 20+ othe
 
 ## Skills
 
-Eight skills at **[github.com/mariadb/skills](https://github.com/mariadb/skills)** — each for a different situation where agents need MariaDB-specific guidance. Install instructions and how to suggest improvements follow below.
+We have created an initial set of eight skills at **[github.com/mariadb/skills](https://github.com/mariadb/skills)** — each for a different situation where agents need MariaDB-specific guidance. Install instructions and how to suggest improvements follow below.
+
+Skills use wrong/right pairs, version annotations, and links to official documentation so agents can tailor advice to the MariaDB version you run.
 
 ### [mysql-to-mariadb](https://github.com/MariaDB/skills/blob/main/mysql-to-mariadb/SKILL.md)
 
@@ -44,9 +46,9 @@ For AI applications, RAG, and semantic search. Native vector support since Maria
 
 For connecting agents to a MariaDB database via the Model Context Protocol — schemas, read-only SQL, optional semantic search, and secure setup.
 
-Skills use wrong/right pairs, version annotations, and links to official documentation so agents can tailor advice to the MariaDB version you run.
-
 ## How to install
+
+### Interactive install with Node.js
 
 Use [npx skills](https://github.com/vercel-labs/skills) for an interactive install — choose which MariaDB skills to install and which agents on your system (Claude, Cursor, Codex, etc.):
 
