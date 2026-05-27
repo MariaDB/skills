@@ -8,9 +8,9 @@ A skill is a curated markdown file the agent reads when a topic matches. Think o
 
 Skills work with Claude Code, GitHub Copilot, Cursor, OpenAI Codex, and 20+ other tools. Learn more at [agentskills.io](https://agentskills.io) and browse community skills at [skills.sh](https://www.skills.sh).
 
-## Skills
+## Skills for MariaDB
 
-We have created an initial set of eight skills at **[github.com/mariadb/skills](https://github.com/mariadb/skills)** — each for a different situation where agents need MariaDB-specific guidance. Install instructions and how to suggest improvements follow below.
+We have created an initial set of eight skills at **[github.com/mariadb/skills](https://github.com/mariadb/skills)** — each for a different situation where agents need MariaDB-specific guidance. Install and usage instructions follow below.
 
 Skills use wrong/right pairs, version annotations, and links to official documentation so agents can tailor advice to the MariaDB version you run.
 
