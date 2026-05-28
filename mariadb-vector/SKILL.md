@@ -5,7 +5,7 @@ description: "Best practices for using vectors and AI with MariaDB. Use when wri
 
 # MariaDB Vector & AI Best Practices
 
-*Last updated: 2026-05-25*
+*Last updated: 2026-05-28*
 
 ## Critical: MariaDB Vector Is Built-In
 
@@ -50,22 +50,26 @@ VECTOR INDEX (embedding) M=6 DISTANCE=euclidean   -- default
 VECTOR INDEX (embedding) M=8 DISTANCE=cosine
 ```
 
-- **DISTANCE**: `euclidean` (default) or `cosine`. Pick the one your embedding model recommends. Both are equally fast in MariaDB thanks to SIMD optimizations.
+- **DISTANCE**: `euclidean` (default) or `cosine`. Pick the one your embedding model recommends. Both are equally fast in MariaDB thanks to SIMD optimizations. **Always declare `DISTANCE=` explicitly**. default to euclidian and a cosine query against a euclidean index silently full-scans.
 - **M**: Controls the HNSW graph connectivity (range 3–200). Higher values improve recall but cost more memory and slower inserts. Default is fine for most workloads; increase to ~16–32 for very large datasets where recall matters more than insert speed.
 
 ### Insert Vectors
 
-Use `VEC_FromText()` to convert a JSON array of floats:
+Vectors are stored as packed 32-bit IEEE 754 floats little-endian encoded. Bind raw bytes from application code — **5× faster than `VEC_FromText()`**. Stored bytes are identical.
 
-```sql
-INSERT INTO documents (content, embedding)
-VALUES (
-    'MariaDB Vector stores embeddings natively',
-    VEC_FromText('[0.12, -0.34, 0.56, ...]')
-);
+```python
+import numpy as np
+cur.execute(
+    "INSERT INTO documents (content, embedding) VALUES (?, ?)",
+    (content, np.asarray(embedding, dtype=np.float32).tobytes()),
+)
 ```
 
-Vectors are stored as 32-bit IEEE 754 floats internally. Raw binary inserts also work but `VEC_FromText()` is preferred for readability.
+Use `VEC_FromText()` only for hand-written SQL / CLI:
+
+```sql
+INSERT INTO documents (embedding) VALUES (VEC_FromText('[0.12, -0.34, 0.56, ...]'));
+```
 
 ### Query: Find Nearest Neighbors
 
@@ -108,6 +112,21 @@ Use `VEC_DISTANCE_EUCLIDEAN()` or `VEC_DISTANCE_COSINE()` for unindexed columns 
   ALTER TABLE my_table ADD VECTOR INDEX (embedding);
   ```
 - **Index precision.** MariaDB uses `int16` for index storage (15 bits of precision), which is better than the 10 bits of float16 used by some other implementations. This means higher recall at the same speed.
+- **`ORDER BY` must be the literal `VEC_DISTANCE_*(col, ?)` call (or its alias) with `ASC` direction.** Wrapping the distance in an expression (e.g. `ORDER BY (1.0 - VEC_DISTANCE_COSINE(...)) DESC LIMIT N` to sort by similarity score) breaks the optimizer's HNSW pattern match and falls back to a full scan. Compute the score in an outer SELECT instead:
+  ```sql
+  SELECT t.id, 1.0 - t.distance AS score FROM (
+      SELECT id, VEC_DISTANCE_COSINE(embedding, ?) AS distance
+      FROM docs ORDER BY distance ASC LIMIT 10
+  ) AS t ORDER BY score DESC;
+  ```
+- **`WHERE VEC_DISTANCE(...) < threshold` is a full scan.** The vector index only engages with `ORDER BY VEC_DISTANCE(...) LIMIT N`. For threshold queries, wrap the indexed top-K in a subquery and filter outside
+  ```sql
+  SELECT * FROM (
+      SELECT content, VEC_DISTANCE_COSINE(embedding, ?) AS distance
+      FROM chunks ORDER BY distance LIMIT 100
+  ) AS t WHERE t.distance < 0.5;
+  ```
+  `LIMIT K` is a hard cap; pick K generously if many rows may match.
 
 ## RAG (Retrieval-Augmented Generation) Pattern
 
@@ -117,11 +136,11 @@ The most common AI use case with MariaDB Vector. The flow:
 2. **Embed** each chunk using your model (OpenAI, Sentence Transformers, Cohere, etc.).
 3. **Store** chunks with their embeddings in MariaDB.
 4. At query time, **embed** the user's question with the same model.
-5. **Retrieve** the nearest chunks:
+5. **Retrieve** the nearest chunks (bind `:user_embedding` as float32 bytes):
    ```sql
    SELECT content
    FROM chunks
-   ORDER BY VEC_DISTANCE(embedding, VEC_FromText(:user_embedding))
+   ORDER BY VEC_DISTANCE(embedding, :user_embedding)
    LIMIT 5;
    ```
 6. **Feed** retrieved chunks as context to your LLM for the final answer.
@@ -147,13 +166,15 @@ Keep `doc_id` indexed so you can join back to the source document or filter by d
 ### Minimal End-to-End Python Example
 
 ```python
-import mariadb, json
+import mariadb
+import numpy as np
 from openai import OpenAI
 
 client = OpenAI()
 
 def embed(text):
-    return client.embeddings.create(input=text, model="text-embedding-3-small").data[0].embedding
+    vec = client.embeddings.create(input=text, model="text-embedding-3-small").data[0].embedding
+    return np.asarray(vec, dtype=np.float32).tobytes()
 
 # Create database and table if they don't exist
 conn = mariadb.connect(host="127.0.0.1", port=3306, user="root", password="")
@@ -172,24 +193,24 @@ conn.commit()
 
 # Store a document chunk
 cur.execute(
-    "INSERT INTO chunks (content, embedding) VALUES (?, VEC_FromText(?))",
-    ("MariaDB Vector stores embeddings natively", json.dumps(embed("MariaDB Vector stores embeddings natively")))
+    "INSERT INTO chunks (content, embedding) VALUES (?, ?)",
+    ("MariaDB Vector stores embeddings natively", embed("MariaDB Vector stores embeddings natively"))
 )
 conn.commit()
 
 # Retrieve top-5 nearest chunks for a user question
-question_vec = json.dumps(embed("How does MariaDB store vectors?"))
+question_vec = embed("How does MariaDB store vectors?")
 cur.execute("""
-    SELECT content, VEC_DISTANCE_EUCLIDEAN(embedding, VEC_FromText(?)) AS distance
+    SELECT content, VEC_DISTANCE_COSINE(embedding, ?) AS distance
     FROM chunks
-    ORDER BY VEC_DISTANCE_EUCLIDEAN(embedding, VEC_FromText(?))
+    ORDER BY distance
     LIMIT 5
-""", (question_vec, question_vec))
+""", (question_vec,))
 context = "\n".join(row[0] for row in cur.fetchall())
 # Pass `context` to your LLM as the retrieved context for the answer
 ```
 
-The `mariadb` connector (`pip install mariadb`) is the official Python driver. The `json.dumps()` call converts Python's list of floats into the JSON array string that `VEC_FromText()` expects.
+The `mariadb` connector (`pip install mariadb`) is the official Python driver. On big-endian hosts, use `dtype="<f4"` to force little-endian.
 
 ## Framework Integrations
 
@@ -223,6 +244,7 @@ The embedding model determines vector quality. Some practical guidance:
 - **Multi-connection scalability** is a strength. Benchmark results show MariaDB Vector scales well with concurrent queries, outperforming some dedicated vector databases in multi-threaded scenarios.
 - For large datasets (millions of vectors), tune the **M parameter** upward and ensure sufficient memory for the index.
 - **Bulk inserts**: load data first, then create the vector index. This is significantly faster than inserting into an already-indexed table.
+- **Bind embeddings as binary** (`float32.tobytes()`), not `VEC_FromText()`. ~5× faster, ~5× smaller wire payload, byte-identical storage.
 
 ### Tuning: mhnsw System Variables
 
