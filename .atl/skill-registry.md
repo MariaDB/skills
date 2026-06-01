@@ -1,0 +1,8 @@
+- [mariadb-features](file:///home/lorenzo-aps/Dev/skills/mariadb-features/SKILL.md)
+- [mariadb-mcp](file:///home/lorenzo-aps/Dev/skills/mariadb-mcp/SKILL.md)
+- [mariadb-query-optimization](file:///home/lorenzo-aps/Dev/skills/mariadb-query-optimization/SKILL.md)
+- [mariadb-replication-and-ha](file:///home/lorenzo-aps/Dev/skills/mariadb-replication-and-ha/SKILL.md)
+- [mariadb-system-versioned-tables](file:///home/lorenzo-aps/Dev/skills/mariadb-system-versioned-tables/SKILL.md)
+- [mariadb-vector](file:///home/lorenzo-aps/Dev/skills/mariadb-vector/SKILL.md)
+- [mysql-to-mariadb](file:///home/lorenzo-aps/Dev/skills/mysql-to-mariadb/SKILL.md)
+- [oracle-to-mariadb](file:///home/lorenzo-aps/Dev/skills/oracle-to-mariadb/SKILL.md)
