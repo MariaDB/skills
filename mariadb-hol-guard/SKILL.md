@@ -5,7 +5,7 @@ description: "Protect local AI-agent MariaDB workflows with HOL Guard before too
 
 # HOL Guard for MariaDB Agent Workflows
 
-*Last updated: 2026-08-26*
+*Last updated: 2026-08-27*
 
 ## What LLMs Get Wrong
 
@@ -23,16 +23,17 @@ Skills and HOL Guard run on the AI-agent host, not inside the MariaDB server. Ke
 
 ## Install HOL Guard on the Agent Host
 
-Check whether the runtime CLI is already available:
+Probe the actual runtime CLI rather than relying on a shell-specific executable lookup:
 
 ```bash
-command -v hol-guard
+hol-guard --version
 ```
 
-If it is missing and `pipx` is available, install the isolated CLI distribution:
+If the probe reports that the command is unavailable and `pipx` is available, install the isolated CLI distribution, then repeat the probe:
 
 ```bash
 pipx install hol-guard
+hol-guard --version
 ```
 
 Then inspect the local environment before changing harness configuration:
@@ -52,9 +53,10 @@ hol-guard install <harness>
 hol-guard run <harness> --dry-run
 hol-guard run <harness>
 hol-guard status
+hol-guard doctor <harness> --json
 ```
 
-Do not claim the agent is protected until `hol-guard status` confirms the installed state. Keep the dry run in the sequence so the user can inspect the planned Guard-owned changes before activation.
+Do not claim the agent is protected until Guard status and harness-specific doctor output confirm the installed state. Keep the dry run in the sequence so the user can inspect the planned Guard-owned changes before activation. If the dry run or doctor reports an unexpected mutation, error, or unavailable protection state, stop instead of retrying the same work through an unprotected agent.
 
 If Guard queues or blocks an action, inspect it rather than bypassing the boundary:
 
