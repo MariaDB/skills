@@ -67,9 +67,9 @@ Do not generate `mysql -u root -p` for a fresh MariaDB install — there is no r
 
 ## Upgrade Operations
 
-Agents consistently omit the `mariadb-upgrade` step after a binary upgrade, which can cause system table errors.
+Agents consistently omit the `mariadb-upgrade` step after a binary upgrade, which can cause system table errors. Also distinguish **minor** vs **major** upgrades — `dnf`/`apt upgrade` is only the in-place path for minor versions.
 
-**Standard upgrade pattern:**
+**Minor version upgrade** (same major line, e.g. 11.4.x → 11.4.y) — replace the binary in place:
 ```bash
 systemctl stop mariadb
 # Replace binary via package manager (dnf/apt upgrade)
@@ -77,9 +77,20 @@ systemctl start mariadb
 mariadb-upgrade    # updates system tables — do not skip this step
 ```
 
+**Major version upgrade** (e.g. 10.11 → 11.4) — do **not** use `dnf`/`apt upgrade` alone. Point the package manager at the new major-release MariaDB repository, then uninstall the old server packages and install the new ones:
+```bash
+# 1. Update MariaDB repo config to the target major release
+systemctl stop mariadb
+# 2. Uninstall old packages (apt-get remove mariadb-server / dnf remove MariaDB-server)
+# 3. Install the new major version packages
+# 4. Adjust my.cnf for removed or renamed options if needed
+systemctl start mariadb
+mariadb-upgrade    # updates system tables — do not skip this step
+```
+
 **Galera Cluster rolling upgrade** — never stop all nodes simultaneously:
 1. Take one non-primary node out of the load balancer
-2. Stop, upgrade the binary, start the node
+2. Stop, upgrade the binary (minor vs major as above), start the node
 3. Confirm sync: `SHOW STATUS LIKE 'wsrep_local_state';` — must be `4` (Synced)
 4. Repeat for each remaining non-primary node
 5. Upgrade the primary node last
